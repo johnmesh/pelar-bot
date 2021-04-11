@@ -30,3 +30,17 @@ const ORDER_DISCARD = "order_container_discard"
 const BID_INPUT = "id_bid"
 const BID_BUTTON_ID = "apply_order"
 const BID_REC = "rec_bid"
+
+var Amount = map[string]string{
+	"4":  "4",
+	"5":  "4",
+	"6":  "4.8",
+	"7":  "5",
+	"8":  "6",
+	"9":  "7",
+	"10": "8",
+	"11": "9",
+	"12": "9",
+	"13": "10",
+	"14": "11",
+}

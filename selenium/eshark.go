@@ -79,23 +79,22 @@ type Bidder struct {
 type Account struct {
 	Email    string
 	Password string
+	Bids     map[string]string
 }
 
 func (b *Bidder) Start(ctx *Context) {
 	defer b.WG.Done()
+
 	// Start a Selenium WebDriver server instance (if one is not already
 	// running).
 	const PATH = "/Users/mesh"
 	const (
 		// These paths will be different on your system.
-		seleniumPath     = PATH + "/vendor/selenium-server-standalone-3.141.0.jar"
-		chromeDriverPath = PATH + "/vendor/chromedriver_mac64"
-		geckoDriverPath  = PATH + "/vendor/geckodriver"
+		seleniumPath     = "./mesh/selenium-server-standalone-3.141.0.jar"
+		chromeDriverPath = "./mesh/chromedriver89_linux"
 	)
-
-	const defaultTimeOut = 20 * time.Second
-
 	selenium.SetDebug(false)
+	const defaultTimeOut = 20 * time.Second
 
 	service, err := selenium.NewChromeDriverService(chromeDriverPath, b.Port)
 	defer service.Stop()
@@ -104,10 +103,19 @@ func (b *Bidder) Start(ctx *Context) {
 	}
 
 	// Connect to the WebDriver instance running locally.
-	caps := selenium.Capabilities{"browserName": "chrome"}
+	caps := selenium.Capabilities{"browserName": "chrome", "pageLoadStrategy": "eager"}
 
 	chromeCaps := chrome.Capabilities{
-		Args: []string{"--headless"},
+		Args: []string{
+			"--headless",
+			"--no-sandbox",
+			"--window-size=1420,1080",
+			"--disable-dev-shm-usage",
+			"--disable-gpu",
+			"--disable-logging",
+			"--output=/dev/null",
+		},
+		Path: "/usr/bin/google-chrome",
 	}
 
 	caps.AddChrome(chromeCaps)
@@ -117,7 +125,7 @@ func (b *Bidder) Start(ctx *Context) {
 	if err != nil {
 		panic(err)
 	}
-	//wd.ResizeWindow("", 600, 750)
+	wd.ResizeWindow("", 600, 750)
 	defer wd.Quit()
 
 	// Navigate to the esshayshark page.
@@ -172,8 +180,8 @@ func (b *Bidder) Start(ctx *Context) {
 
 	for {
 		//Refresh the page to prevent the site from loggin out.
-		if count > 10000 {
-			wd.Refresh()
+		if count > 1000 {
+			wd.Get("https://essayshark.com/writer/orders/")
 			count = 0
 		}
 		count++
@@ -184,14 +192,14 @@ func (b *Bidder) Start(ctx *Context) {
 			continue
 
 		}
-		fmt.Println("ORDERS--->", len(orders))
+		//sfmt.Println("ORDERS--->", len(orders))
 
 		var order selenium.WebElement
 		var orderNo string
 		for i := range orders {
 			order = nil
 			dataID, err := orders[i].GetAttribute("data-id")
-			fmt.Println("orderNo", i)
+			//fmt.Println("orderNo", i)
 
 			if err != nil {
 				continue
@@ -199,7 +207,7 @@ func (b *Bidder) Start(ctx *Context) {
 
 			if _, ok := ctx.Assigned[dataID]; ok {
 				//The order is already taken
-				fmt.Println("The order is already taken", dataID)
+				//fmt.Println("The order is already taken", dataID)
 				continue
 			}
 			//Add the order to the list
@@ -217,7 +225,7 @@ func (b *Bidder) Start(ctx *Context) {
 			fmt.Println(od)
 			fmt.Println("-----------------------------------------------")
 
-			order, _ = wd.FindElement(selenium.ByXPATH, "//tr[@data-id ='"+orderNo+"']")
+			order, _ = order.FindElement(selenium.ByXPATH, "//tr[@data-id ='"+orderNo+"']")
 			orderType, err := order.FindElement(selenium.ByCSSSelector, ".service_type")
 			if err != nil {
 				panic(err)
@@ -350,7 +358,8 @@ func (b *Bidder) Start(ctx *Context) {
 			if elem == nil {
 				fmt.Println("element not found:----->", err)
 				//Remove the order from the list
-				delete(ctx.Assigned, orderNo)
+				//delete(ctx.Assigned, orderNo)
+				ctx.Assigned[orderNo] = "done"
 				wd.Get("https://essayshark.com/writer/orders/")
 				continue
 				//try bidding here
@@ -383,7 +392,8 @@ func (b *Bidder) Start(ctx *Context) {
 					wd.Refresh()
 					if err := makeBid(amount, wd); err != nil {
 						//Remove the order from the list
-						delete(ctx.Assigned, orderNo)
+						//delete(ctx.Assigned, orderNo)
+						ctx.Assigned[orderNo] = "done"
 						wd.Get("https://essayshark.com/writer/orders/")
 						break
 					}
@@ -396,7 +406,8 @@ func (b *Bidder) Start(ctx *Context) {
 					//The bidding has ended.This prevents infinite loops
 					fmt.Println("The countdown has ended")
 					//Remove the order from the list
-					delete(ctx.Assigned, orderNo)
+					//delete(ctx.Assigned, orderNo)
+					ctx.Assigned[orderNo] = "done"
 					wd.Get("https://essayshark.com/writer/orders/")
 					break
 				}
@@ -438,4 +449,27 @@ func makeBid(amount string, wd selenium.WebDriver) error {
 		return err
 	}
 	return nil
+}
+
+//CleanOrders delete the complete orders every 1min
+func (b *Bidder) CleanOrders(ctx *Context) {
+	start := time.Now()
+
+	for {
+		d := time.Now().Sub(start).Seconds()
+		duration := int(d)
+
+		if duration >= 60 {
+			fmt.Println("cleaning---->", len(ctx.Assigned))
+			for k, v := range ctx.Assigned {
+				if v == "done" {
+					delete(ctx.Assigned, k)
+				}
+			}
+
+			start = time.Now()
+			fmt.Println("cleaning complete---->", len(ctx.Assigned))
+		}
+	}
+
 }
