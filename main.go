@@ -11,13 +11,11 @@ import (
 func main() {
 	const (
 		// These paths will be different on your system.
-		seleniumPath     = "./mesh/selenium-server-standalone-3.141.0.jar"
-		chromeDriverPath = "./mesh/chromedriver_mac64"
+		seleniumPath     = "./vendor/selenium-server-standalone-3.141.0.jar"
+		chromeDriverPath = "./vendor/chromedriver89_linux"
 
 		port = 4015
 	)
-
-	fmt.Println("Starting the proccess--------->")
 
 	opts := []selenium.ServiceOption{
 		/* selenium.StartFrameBuffer(),  */      // Start an X frame buffer for the browser to run in.

@@ -84,14 +84,17 @@ type Account struct {
 
 func (b *Bidder) Start(ctx *Context) {
 	defer b.WG.Done()
+	defer func() {
+		fmt.Println("The functions has ended")
+	}()
 
 	// Start a Selenium WebDriver server instance (if one is not already
 	// running).
 	const PATH = "/Users/mesh"
 	const (
 		// These paths will be different on your system.
-		seleniumPath     = "./mesh/selenium-server-standalone-3.141.0.jar"
-		chromeDriverPath = "./mesh/chromedriver89_linux"
+		seleniumPath     = "./vendor/selenium-server-standalone-3.141.0.jar"
+		chromeDriverPath = "./vendor/chromedriver89_linux"
 	)
 	selenium.SetDebug(false)
 	const defaultTimeOut = 20 * time.Second
@@ -109,11 +112,9 @@ func (b *Bidder) Start(ctx *Context) {
 		Args: []string{
 			"--headless",
 			"--no-sandbox",
-			"--window-size=1420,1080",
+			"--window-size=600,750",
 			"--disable-dev-shm-usage",
 			"--disable-gpu",
-			"--disable-logging",
-			"--output=/dev/null",
 		},
 		Path: "/usr/bin/google-chrome",
 	}
@@ -179,6 +180,7 @@ func (b *Bidder) Start(ctx *Context) {
 	var count int
 
 	for {
+		fmt.Printf("[%d]:polling... \n", b.ID)
 		//Refresh the page to prevent the site from loggin out.
 		if count > 1000 {
 			wd.Get("https://essayshark.com/writer/orders/")
@@ -301,10 +303,10 @@ func (b *Bidder) Start(ctx *Context) {
 			}
 			budget, err := elem.Text()
 
-			b, _ := strconv.ParseFloat(budget, 10)
+			bg, _ := strconv.ParseFloat(budget, 10)
 			p, _ := strconv.Atoi(noOfPages)
 
-			minBid := b / float64(p)
+			minBid := bg / float64(p)
 			minBid = toFixed(minBid, 2)
 
 			fmt.Println("MinBid--->", minBid, budget, noOfPages)
@@ -325,7 +327,7 @@ func (b *Bidder) Start(ctx *Context) {
 			wd.Get("https://essayshark.com/writer/orders/" + orderNo + ".html")
 			wd.Refresh()
 
-			//download any files
+			//download atleast one file
 			filepath :=
 				"//div[@class='paper_instructions_view']/a[contains (@data-url-raw,'/writer/get_additional_material.html')]"
 			elem, err = wd.FindElement(selenium.ByXPATH, filepath)
@@ -364,12 +366,29 @@ func (b *Bidder) Start(ctx *Context) {
 				continue
 				//try bidding here
 			}
+			//Get the recommended bidding amount for the order
+			elem, err = wd.FindElement(selenium.ByID, "id_order_bidding_form")
+			elem, err = elem.FindElement(selenium.ByID, "rec_bid")
+
+			rec, err := elem.Text()
+			var amt string
+			if rec != "" {
+				r := strings.Split(rec, "$")[1]
+				if v, ok := b.Account.Bids[r]; ok {
+					amt = v
+				}
+			}
+
+			fmt.Println("Rec-amount", amt, rec)
+			if amt != "" {
+				amount = amt
+			}
 
 			countDown, _ := strconv.Atoi(timer)
 			start := time.Now()
 
 			for countDown > 0 {
-				//try biddine here
+				//watch the timer
 
 				elem, err = wd.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
 				var tleft int
@@ -387,7 +406,8 @@ func (b *Bidder) Start(ctx *Context) {
 				duration := int(d)
 				diff := countDown - duration
 
-				if tleft < 11 || diff < 11 {
+				if tleft < 30 || diff < 30 {
+					fmt.Println("countdown", diff)
 					//bid here
 					wd.Refresh()
 					if err := makeBid(amount, wd); err != nil {
@@ -402,7 +422,6 @@ func (b *Bidder) Start(ctx *Context) {
 				}
 
 				if duration >= countDown {
-					//try bidding here
 					//The bidding has ended.This prevents infinite loops
 					fmt.Println("The countdown has ended")
 					//Remove the order from the list
