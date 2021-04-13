@@ -180,7 +180,7 @@ func (b *Bidder) Start(ctx *Context) {
 	}, defaultTimeOut)
 
 	var count int
-
+	fmt.Println("polling....")
 	for {
 		fmt.Printf("[%d]:polling... \n", b.ID)
 		//Refresh the page to prevent the site from loggin out.
