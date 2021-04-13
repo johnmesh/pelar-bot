@@ -138,15 +138,14 @@ func (b *Bidder) Start(ctx *Context) {
 	if err := wd.Get("https://essayshark.com/"); err != nil {
 		panic(err)
 	}
-	fmt.Println("-1-------->")
+
 	elem, err := wd.FindElement(selenium.ByID, "es-cookie-button-submit")
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("0-------->")
 	elem.Click()
-	fmt.Println("1-------->")
+
 	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
 		elem, _ := driver.FindElement(selenium.ByID, LOGIN_ACCOUNT_LINK_ID)
 		if err := elem.Click(); err == nil {
@@ -154,7 +153,7 @@ func (b *Bidder) Start(ctx *Context) {
 		}
 		return false, nil
 	}, defaultTimeOut)
-	fmt.Println("2-------->")
+
 	elem, err = wd.FindElement(selenium.ByXPATH, "//input[@id='id_esauth_login_field']")
 	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
 		err = elem.SendKeys(b.Account.Email)
@@ -163,15 +162,15 @@ func (b *Bidder) Start(ctx *Context) {
 		}
 		return false, nil
 	}, defaultTimeOut)
-	fmt.Println("3-------->")
+
 	elem, err = wd.FindElement(selenium.ByXPATH, "//input[@id='id_esauth_pwd_field']")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("4-------->")
+
 	elem.SendKeys(b.Account.Password)
 	wd.KeyDown(selenium.EnterKey)
-	fmt.Println("5-------->")
+
 	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
 		elem, _ := driver.FindElement(selenium.ByID, ORDER_LOADING)
 
@@ -184,11 +183,10 @@ func (b *Bidder) Start(ctx *Context) {
 
 		return false, nil
 	}, defaultTimeOut)
-	fmt.Println("6-------->")
-	var count int
-	fmt.Println("polling....")
-	for {
 
+	var count int
+
+	for {
 		fmt.Printf("[%d]:polling... \n", b.ID)
 		//Refresh the page to prevent the site from loggin out.
 		if count > 1000 {
