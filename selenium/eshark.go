@@ -353,9 +353,9 @@ func (b *Bidder) Start(ctx *Context) {
 			elem, err = elem.FindElement(selenium.ByID, "rec_bid")
 
 			rec, err := elem.Text()
-			var amt string
+			var amt, r string
 			if rec != "" {
-				r := strings.Split(rec, "$")[1]
+				r = strings.Split(rec, "$")[1]
 				if v, ok := b.Account.Bids[r]; ok {
 					amt = v
 				}
@@ -364,6 +364,8 @@ func (b *Bidder) Start(ctx *Context) {
 			fmt.Println("Rec-amount", amt, rec)
 			if amt != "" {
 				amount = amt
+			} else if noOfPages == "" {
+				amount = r
 			}
 
 			var timer string
