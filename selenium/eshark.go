@@ -135,6 +135,7 @@ func (b *Bidder) Start(ctx *Context) {
 	if err := wd.Get("https://essayshark.com/"); err != nil {
 		panic(err)
 	}
+	fmt.Println("-1-------->")
 	elem, err := wd.FindElement(selenium.ByID, "es-cookie-button-submit")
 	if err != nil {
 		panic(err)
