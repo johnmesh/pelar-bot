@@ -417,7 +417,7 @@ func (b *Bidder) Start(ctx *Context) {
 					fmt.Println("countdown", diff)
 					//bid here
 					wd.Refresh()
-					if err := makeBid(amount, wd); err != nil {
+					if err := makeBid(amount, wd, amt); err != nil {
 						//Remove the order from the list
 						//delete(ctx.Assigned, orderNo)
 						ctx.Assigned[orderNo] = "done"
@@ -459,8 +459,8 @@ func (b *Bidder) Start(ctx *Context) {
 
 }
 
-func makeBid(amount string, wd selenium.WebDriver) error {
-	fmt.Println("make bid---->", amount)
+func makeBid(amount string, wd selenium.WebDriver, amt string) error {
+	fmt.Println("make bid---->", amount, "amt:", amt)
 	elem, err := wd.FindElement(selenium.ByID, "id_bid")
 	if err != nil {
 		return err
