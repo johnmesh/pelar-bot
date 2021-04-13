@@ -257,8 +257,8 @@ func (b *Bidder) Start(ctx *Context) {
 				//delete(ctx.Assigned, orderNo)
 				//continue
 			}
+			var noOfPages string
 			if elem != nil {
-
 				pages, err := elem.Text()
 				if err != nil {
 					//delete(ctx.Assigned, orderNo)
