@@ -348,31 +348,6 @@ func (b *Bidder) Start(ctx *Context) {
 			}
 			amount := fmt.Sprintf("%.2f", minBid)
 
-			var timer string
-			wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
-				elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
-				if elem != nil {
-					timer, err = elem.Text()
-					return timer != "", nil
-				}
-				//try bidding here
-				if err := makeBid(amount, wd); err != nil {
-					elem = nil
-					return true, nil
-				}
-
-				return false, nil
-			}, defaultTimeOut)
-
-			if elem == nil {
-				fmt.Println("element not found:----->", err)
-				//Remove the order from the list
-				//delete(ctx.Assigned, orderNo)
-				ctx.Assigned[orderNo] = "done"
-				wd.Get("https://essayshark.com/writer/orders/")
-				continue
-				//try bidding here
-			}
 			//Get the recommended bidding amount for the order
 			elem, err = wd.FindElement(selenium.ByID, "id_order_bidding_form")
 			elem, err = elem.FindElement(selenium.ByID, "rec_bid")
@@ -389,6 +364,32 @@ func (b *Bidder) Start(ctx *Context) {
 			fmt.Println("Rec-amount", amt, rec)
 			if amt != "" {
 				amount = amt
+			}
+
+			var timer string
+			wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+				elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
+				if elem != nil {
+					timer, err = elem.Text()
+					return timer != "", nil
+				}
+				//try bidding here
+				if err := makeBid(amount, wd, amt); err != nil {
+					elem = nil
+					return true, nil
+				}
+
+				return false, nil
+			}, defaultTimeOut)
+
+			if elem == nil {
+				fmt.Println("element not found:----->", err)
+				//Remove the order from the list
+				//delete(ctx.Assigned, orderNo)
+				ctx.Assigned[orderNo] = "done"
+				wd.Get("https://essayshark.com/writer/orders/")
+				continue
+				//try bidding here
 			}
 
 			countDown, _ := strconv.Atoi(timer)
