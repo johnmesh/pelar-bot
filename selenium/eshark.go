@@ -102,7 +102,7 @@ func (b *Bidder) Start(ctx *Context) {
 	service, err := selenium.NewChromeDriverService(chromeDriverPath, b.Port)
 	defer service.Stop()
 	if err != nil {
-		//panic(err) // panic is used only as an example and is not otherwise recommended.
+		panic(err) // panic is used only as an example and is not otherwise recommended.
 	}
 
 	// Connect to the WebDriver instance running locally.
