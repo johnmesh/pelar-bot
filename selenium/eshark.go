@@ -129,6 +129,8 @@ func (b *Bidder) Start(ctx *Context) {
 	wd.ResizeWindow("", 600, 750)
 	defer wd.Quit()
 
+	fmt.Println("-----Driver started successfully------")
+
 	// Navigate to the esshayshark page.
 	if err := wd.Get("https://essayshark.com/"); err != nil {
 		panic(err)
