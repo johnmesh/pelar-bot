@@ -257,16 +257,19 @@ func (b *Bidder) Start(ctx *Context) {
 				//delete(ctx.Assigned, orderNo)
 				//continue
 			}
+			if elem != nil {
 
-			pages, err := elem.Text()
-			if err != nil {
-				//delete(ctx.Assigned, orderNo)
-				//continue
+				pages, err := elem.Text()
+				if err != nil {
+					//delete(ctx.Assigned, orderNo)
+					//continue
+				}
+				noOfPages := strings.Split(pages, "\n")[0]
+
+				fmt.Println("No of Pages--->", noOfPages)
+			} else {
+				wd.Refresh()
 			}
-			noOfPages := strings.Split(pages, "\n")[0]
-
-			fmt.Println("No of Pages--->", noOfPages)
-
 			/*
 			 * This section gets the order deadline
 			 */
