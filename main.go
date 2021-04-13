@@ -18,7 +18,7 @@ func main() {
 	)
 
 	opts := []selenium.ServiceOption{
-		/* selenium.StartFrameBuffer(),  */      // Start an X frame buffer for the browser to run in.
+		selenium.StartFrameBuffer(),             // Start an X frame buffer for the browser to run in.
 		selenium.ChromeDriver(chromeDriverPath), // Specify the path to GeckoDriver in order to use Firefox.
 		/* 	selenium.Output(os.Stderr),   */ // Output debug information to STDERR.
 	}

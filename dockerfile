@@ -45,6 +45,10 @@ RUN apt-get update && \
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 RUN export JAVA_HOME
 
+# Install xvfb.
+RUN apt-get install -y xvfb
+
+
 # Install wget.
 RUN apt-get install -y wget
 
