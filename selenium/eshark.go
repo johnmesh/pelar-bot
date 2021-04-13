@@ -113,8 +113,6 @@ func (b *Bidder) Start(ctx *Context) {
 			"--headless",
 			"--no-sandbox",
 			"--window-size=600,750",
-			"--disable-dev-shm-usage",
-			"--disable-gpu",
 		},
 		Path: "/usr/bin/google-chrome",
 	}
