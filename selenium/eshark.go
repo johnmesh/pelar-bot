@@ -267,69 +267,112 @@ func (b *Bidder) Start(ctx *Context) {
 
 			fmt.Println("No of Pages--->", noOfPages)
 
+			/*
+			 * This section gets the order deadline
+			 */
 			elem, err = order.FindElement(selenium.ByCSSSelector, ".td_deadline")
-			elem, err = elem.FindElement(selenium.ByCSSSelector, ".d-left")
-			if err != nil {
-				//delete(ctx.Assigned, orderNo)
-				//continue
-			}
-
-			deadline, err := elem.Text()
-			if err != nil {
-				//delete(ctx.Assigned, orderNo)
-				//continue
-			}
-			d := convertTimeToMills(deadline)
-			fmt.Println("Deadline--->", d)
-
-			elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
-			elem, err = elem.FindElement(selenium.ByCSSSelector, ".customer-rating")
-
-			var customerRating string
 			if elem != nil {
-				customerRating, err = elem.Text()
+				elem, err = elem.FindElement(selenium.ByCSSSelector, ".d-left")
 				if err != nil {
-					//no customer rating
+					//delete(ctx.Assigned, orderNo)
 					//continue
-
 				}
+			} else {
+				wd.Refresh()
 			}
-			fmt.Println("Customer Rating--->", customerRating)
 
+			if elem != nil {
+				deadline, err := elem.Text()
+				if err != nil {
+					//delete(ctx.Assigned, orderNo)
+					//continue
+				}
+				d := convertTimeToMills(deadline)
+				fmt.Println("Deadline--->", d)
+			} else {
+				wd.Refresh()
+			}
+
+			/*
+			 *This section checks the customer ratings
+			 */
 			elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
-			elem, err = elem.FindElement(selenium.ByTagName, "a")
-			custStatus, err := elem.GetAttribute("title")
+			if elem != nil {
+				elem, err = elem.FindElement(selenium.ByCSSSelector, ".customer-rating")
+				var customerRating string
+				if elem != nil {
+					customerRating, err = elem.Text()
+					if err != nil {
+						//no customer rating
+						//continue
 
-			fmt.Println("Customer Status--->", custStatus)
+					}
+				}
+				fmt.Println("Customer Rating--->", customerRating)
+			} else {
+				wd.Refresh()
+			}
 
+			/*
+			 * This section checks the customer status
+			 */
+			elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
+			if elem != nil {
+				elem, err = elem.FindElement(selenium.ByTagName, "a")
+				if elem != nil {
+					custStatus, _ := elem.GetAttribute("title")
+					fmt.Println("Customer Status--->", custStatus)
+				}
+			} else {
+				wd.Refresh()
+			}
+
+			/*
+			 *  This section checks the budget amount
+			 */
+			var minBid float64
 			elem, err = order.FindElement(selenium.ByCSSSelector, ".budget")
-			elem, err = elem.FindElement(selenium.ByCSSSelector, ".amount")
-			if err != nil {
-				//delete(ctx.Assigned, orderNo)
-				//continue
-			}
-			budget, err := elem.Text()
-
-			bg, _ := strconv.ParseFloat(budget, 10)
-			p, _ := strconv.Atoi(noOfPages)
-
-			minBid := bg / float64(p)
-			minBid = toFixed(minBid, 2)
-
-			fmt.Println("MinBid--->", minBid, budget, noOfPages)
-
-			elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
-			elem, err = elem.FindElement(selenium.ByCSSSelector, ".new-customer")
-			var newCustomer string
 			if elem != nil {
-				newCustomer, err = elem.Text()
+				elem, err = elem.FindElement(selenium.ByCSSSelector, ".amount")
 				if err != nil {
-					//not a new customer rating
+					//delete(ctx.Assigned, orderNo)
 					//continue
-
 				}
+
+				if elem != nil {
+					budget, _ := elem.Text()
+					bg, _ := strconv.ParseFloat(budget, 10)
+					p, _ := strconv.Atoi(noOfPages)
+
+					minBid = bg / float64(p)
+					minBid = toFixed(minBid, 2)
+
+					fmt.Println("MinBid--->", minBid, budget, noOfPages)
+				}
+
+			} else {
+				wd.Refresh()
 			}
-			fmt.Println("New Customer--->", newCustomer)
+
+			/*
+			 * This section checks if its a new custmomer
+			 */
+			elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
+			if elem != nil {
+				elem, err = elem.FindElement(selenium.ByCSSSelector, ".new-customer")
+				var newCustomer string
+				if elem != nil {
+					newCustomer, err = elem.Text()
+					if err != nil {
+						//not a new customer rating
+						//continue
+
+					}
+				}
+				fmt.Println("New Customer--->", newCustomer)
+			} else {
+				wd.Refresh()
+			}
 
 			wd.Get("https://essayshark.com/writer/orders/" + orderNo + ".html")
 			wd.Refresh()
@@ -348,24 +391,35 @@ func (b *Bidder) Start(ctx *Context) {
 			}
 			amount := fmt.Sprintf("%.2f", minBid)
 
-			//Get the recommended bidding amount for the order
+			/*
+			 * This section checks the remommended bidding amount
+			 */
 			elem, err = wd.FindElement(selenium.ByID, "id_order_bidding_form")
-			elem, err = elem.FindElement(selenium.ByID, "rec_bid")
-
-			rec, err := elem.Text()
 			var amt, r string
-			if rec != "" {
-				r = strings.Split(rec, "$")[1]
-				if v, ok := b.Account.Bids[r]; ok {
-					amt = v
-				}
-			}
+			if elem != nil {
+				elem, err = elem.FindElement(selenium.ByID, "rec_bid")
 
-			fmt.Println("Rec-amount", amt, rec)
-			if amt != "" {
-				amount = amt
-			} else if noOfPages == "" {
-				amount = r
+				if elem != nil {
+					rec, _ := elem.Text()
+
+					if rec != "" {
+						r = strings.Split(rec, "$")[1]
+						if v, ok := b.Account.Bids[r]; ok {
+							amt = v
+						}
+					}
+
+					fmt.Println("Rec-amount", amt, rec)
+				}
+
+				if amt != "" {
+					amount = amt
+				} else if noOfPages == "" {
+					amount = r
+				}
+
+			} else {
+				wd.Refresh()
 			}
 
 			var timer string
