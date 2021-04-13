@@ -294,7 +294,7 @@ func (b *Bidder) Start(ctx *Context) {
 			}
 
 			/*
-			 *This section checks the customer ratings
+			 * This section checks the customer ratings
 			 */
 			elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
 			if elem != nil {
@@ -328,7 +328,7 @@ func (b *Bidder) Start(ctx *Context) {
 			}
 
 			/*
-			 *  This section checks the budget amount
+			 * This section checks the budget amount
 			 */
 			var minBid float64
 			elem, err = order.FindElement(selenium.ByCSSSelector, ".budget")
@@ -398,10 +398,8 @@ func (b *Bidder) Start(ctx *Context) {
 			var amt, r string
 			if elem != nil {
 				elem, err = elem.FindElement(selenium.ByID, "rec_bid")
-
 				if elem != nil {
 					rec, _ := elem.Text()
-
 					if rec != "" {
 						r = strings.Split(rec, "$")[1]
 						if v, ok := b.Account.Bids[r]; ok {
@@ -451,9 +449,9 @@ func (b *Bidder) Start(ctx *Context) {
 			countDown, _ := strconv.Atoi(timer)
 			start := time.Now()
 
+			// This is where the migic happens
 			for countDown > 0 {
 				//watch the timer
-
 				elem, err = wd.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
 				var tleft int
 				if elem == nil {
@@ -497,22 +495,16 @@ func (b *Bidder) Start(ctx *Context) {
 
 			}
 
-			/* time.Sleep(2 * time.Second)
-
-			wd.ExecuteScript("scroll(2000, 200)", nil)
-			elem, err = wd.FindElement(selenium.ByXPATH, "//input[contains(@class,'discard')]")
-			elem.Click()
-
-			wd.Get("https://essayshark.com/writer/orders/") */
-
-			//Remove the order from the list
-			//delete(ctx.Assigned, orderNo)
+			/*
+			 * time.Sleep(2 * time.Second)
+			 * wd.ExecuteScript("scroll(2000, 200)", nil)
+			 * elem, err = wd.FindElement(selenium.ByXPATH, "//input[contains(@class,'discard')]")
+			 * elem.Click()
+			 */
 
 		}
-		//time.Sleep(2 * time.Second)
-	}
 
-	//time.Sleep(20 * time.Second)
+	}
 
 }
 
