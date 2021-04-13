@@ -38,7 +38,7 @@ func main() {
 	//Essayshark account information
 	acc := es.Account{Email: "nambengeleashap@gmail.com", Password: "Optimus#On", Bids: es.Amount}
 
-	for i := 1; i <= 1; i++ {
+	for i := 1; i <= 3; i++ {
 		wg.Add(1)
 		bid := &es.Bidder{
 			ID:      i,
