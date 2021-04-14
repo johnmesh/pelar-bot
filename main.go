@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	es "pelar-bot/selenium"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -14,7 +15,7 @@ func main() {
 		// These paths will be different on your system.
 		seleniumPath     = "./vendor/selenium-server-standalone-3.141.0.jar"
 		chromeDriverPath = "./vendor/chromedriver89_linux"
-		port             = 4015
+	/* 	port             = 4015 */
 	)
 
 	//format disciplines
@@ -31,13 +32,6 @@ func main() {
 		/* 	selenium.Output(os.Stderr),   */ // Output debug information to STDERR.
 	}
 
-	service, err := selenium.NewSeleniumService(seleniumPath, port, opts...)
-
-	defer service.Stop()
-	if err != nil {
-		panic(err) // panic is used only as an example and is not otherwise recommended.
-	}
-
 	selenium.SetDebug(false)
 	assigned := make(map[string]string)
 	ctx := es.Context{Assigned: assigned}
@@ -47,6 +41,14 @@ func main() {
 	acc := es.Account{Email: "nambengeleashap@gmail.com", Password: "Optimus#On", Bids: es.Amount, ExDisciplines: exDisciplines}
 
 	for i := 1; i <= 3; i++ {
+		p := fmt.Sprintf("401%d", i)
+		port, _ := strconv.Atoi(p)
+		service, err := selenium.NewSeleniumService(seleniumPath, port, opts...)
+		defer service.Stop()
+		if err != nil {
+			panic(err) // panic is used only as an example and is not otherwise recommended.
+		}
+
 		wg.Add(1)
 		bid := &es.Bidder{
 			ID:      i,
