@@ -411,7 +411,7 @@ func (b *Bidder) Start(ctx *Context) {
 			 */
 			elem, err = wd.FindElement(selenium.ByCSSSelector, ".fast_order_details")
 			elem, err = elem.FindElement(selenium.ByCSSSelector, ".d50")
-			elems, err := wd.FindElements(selenium.ByCSSSelector, "dl")
+			elems, err := elem.FindElements(selenium.ByCSSSelector, "dl")
 			elem, err = elems[3].FindElement(selenium.ByCSSSelector, "dd")
 			discipline, _ := elem.Text()
 			fmt.Println("Order-Discipline----->", formatText(discipline))
