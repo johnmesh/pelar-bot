@@ -25,6 +25,12 @@ func toFixed(num float64, precision int) float64 {
 	return float64(round(num*output)) / output
 }
 
+func formatText(s string) string {
+	d := strings.Join(strings.Fields(s), "")
+	d = strings.ToLower(d)
+	return d
+}
+
 func convertTimeToMills(date string) int64 {
 	var duration = strings.Split(date, " ")
 	var t int64
@@ -77,9 +83,10 @@ type Bidder struct {
 }
 
 type Account struct {
-	Email    string
-	Password string
-	Bids     map[string]string
+	Email         string
+	Password      string
+	Bids          map[string]string
+	ExDisciplines map[string]string
 }
 
 func (b *Bidder) Start(ctx *Context) {
@@ -92,8 +99,6 @@ func (b *Bidder) Start(ctx *Context) {
 	// running).
 	const PATH = "/Users/mesh"
 	const (
-		// These paths will be different on your system.
-		seleniumPath     = "./vendor/selenium-server-standalone-3.141.0.jar"
 		chromeDriverPath = "./vendor/chromedriver89_linux"
 	)
 	selenium.SetDebug(false)
@@ -171,7 +176,7 @@ func (b *Bidder) Start(ctx *Context) {
 	elem.SendKeys(b.Account.Password)
 	wd.KeyDown(selenium.EnterKey)
 
-	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+	/* wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
 		elem, _ := driver.FindElement(selenium.ByID, ORDER_LOADING)
 
 		if elem != nil {
@@ -182,10 +187,43 @@ func (b *Bidder) Start(ctx *Context) {
 		}
 
 		return false, nil
-	}, defaultTimeOut)
+	}, defaultTimeOut) */
 
+	wd.Get("https://essayshark.com/writer/orders/")
+	//Discard all orders
+	for {
+		var orders []selenium.WebElement
+		wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+			orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
+			if len(orders) > 0 {
+				return true, nil
+			}
+
+			return false, nil
+		}, 5*time.Second)
+
+		if len(orders) < 1 {
+			wd.Refresh()
+			break
+		}
+		//Find the discard button
+		elem, err = wd.FindElement(selenium.ByID, "discard_all_visible")
+		wd.ExecuteScript("scroll(2000, 10)", nil)
+		err = elem.Click()
+
+		//Click the modal popup
+		elem, err = wd.FindElement(selenium.ByCSSSelector, ".ZebraDialog_Buttons")
+		if elem != nil {
+			elem, err = elem.FindElement(selenium.ByCSSSelector, ".ZebraDialog_Button_1")
+			if elem != nil {
+				err = elem.Click()
+			}
+		}
+
+	}
+
+	//Start looking for work
 	var count int
-
 	for {
 		fmt.Printf("[%d]:polling... \n", b.ID)
 		//Refresh the page to prevent the site from loggin out.
@@ -201,7 +239,7 @@ func (b *Bidder) Start(ctx *Context) {
 			continue
 
 		}
-		//sfmt.Println("ORDERS--->", len(orders))
+		//fmt.Println("ORDERS--->", len(orders))
 
 		var order selenium.WebElement
 		var orderNo string
@@ -379,6 +417,16 @@ func (b *Bidder) Start(ctx *Context) {
 
 			wd.Get("https://essayshark.com/writer/orders/" + orderNo + ".html")
 			wd.Refresh()
+
+			/*
+			 * This section checks the order discipline
+			 */
+			elem, err = wd.FindElement(selenium.ByCSSSelector, ".fast_order_details")
+			elem, err = elem.FindElement(selenium.ByCSSSelector, ".d50")
+			elems, err := wd.FindElements(selenium.ByCSSSelector, "dl")
+			elem, err = elems[3].FindElement(selenium.ByCSSSelector, "dd")
+			discipline, _ := elem.Text()
+			fmt.Println("Order-Discipline----->", formatText(discipline))
 
 			//download atleast one file
 			filepath :=

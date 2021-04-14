@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	es "pelar-bot/selenium"
+	"strings"
 	"sync"
 
 	"github.com/tebeka/selenium"
@@ -13,9 +14,16 @@ func main() {
 		// These paths will be different on your system.
 		seleniumPath     = "./vendor/selenium-server-standalone-3.141.0.jar"
 		chromeDriverPath = "./vendor/chromedriver89_linux"
-
-		port = 4015
+		port             = 4015
 	)
+
+	//format disciplines
+	exDisciplines := make(map[string]string)
+	for _, v := range es.ExDiscipines {
+		d := strings.Join(strings.Fields(v), "")
+		d = strings.ToLower(d)
+		exDisciplines[d] = d
+	}
 
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(),             // Start an X frame buffer for the browser to run in.
@@ -36,7 +44,7 @@ func main() {
 	var wg sync.WaitGroup
 
 	//Essayshark account information
-	acc := es.Account{Email: "nambengeleashap@gmail.com", Password: "Optimus#On", Bids: es.Amount}
+	acc := es.Account{Email: "nambengeleashap@gmail.com", Password: "Optimus#On", Bids: es.Amount, ExDisciplines: exDisciplines}
 
 	for i := 1; i <= 3; i++ {
 		wg.Add(1)
