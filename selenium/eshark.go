@@ -197,7 +197,9 @@ func (b *Bidder) Start(ctx *Context) {
 		//Find the discard button
 		elem, err = wd.FindElement(selenium.ByID, "discard_all_visible")
 		wd.ExecuteScript("scroll(2000, 10)", nil)
-		err = elem.Click()
+		if elem != nil {
+			err = elem.Click()
+		}
 
 		//Click the modal popup
 		elem, err = wd.FindElement(selenium.ByCSSSelector, ".ZebraDialog_Buttons")
@@ -261,24 +263,24 @@ func (b *Bidder) Start(ctx *Context) {
 			fmt.Println("-----------------------------------------------")
 
 			order, _ = order.FindElement(selenium.ByXPATH, "//tr[@data-id ='"+orderNo+"']")
-			orderType, err := order.FindElement(selenium.ByCSSSelector, ".service_type")
+			elem, err := order.FindElement(selenium.ByCSSSelector, ".service_type")
 			if err != nil {
 				panic(err)
 			}
 
-			if err := orderType.Click(); err != nil {
+			if err := elem.Click(); err != nil {
 				//delete(ctx.Assigned, orderNo)
 				//continue
 			}
 
-			text, err := orderType.Text()
+			orderType, err := elem.Text()
 			if err != nil {
 				//delete(ctx.Assigned, orderNo)
 				//continue
 			}
-			fmt.Println("Service Name ------->", text)
+			fmt.Println("Service Name ------->", orderType)
 
-			elem, err := order.FindElement(selenium.ByCSSSelector, ".pagesamount")
+			elem, err = order.FindElement(selenium.ByCSSSelector, ".pagesamount")
 			if err != nil {
 				//delete(ctx.Assigned, orderNo)
 				//continue
@@ -451,7 +453,6 @@ func (b *Bidder) Start(ctx *Context) {
 							amt = v
 						}
 					}
-
 					fmt.Println("Rec-amount", amt, rec)
 				}
 
@@ -473,7 +474,7 @@ func (b *Bidder) Start(ctx *Context) {
 					return timer != "", nil
 				}
 				//try bidding here
-				if err := makeBid(amount, wd, amt); err != nil {
+				if err := makeBid(amount, wd, amt, orderType); err != nil {
 					elem = nil
 					return true, nil
 				}
@@ -517,7 +518,7 @@ func (b *Bidder) Start(ctx *Context) {
 					fmt.Println("countdown", diff)
 					//bid here
 					wd.Refresh()
-					if err := makeBid(amount, wd, amt); err != nil {
+					if err := makeBid(amount, wd, amt, orderType); err != nil {
 						//Remove the order from the list
 						//delete(ctx.Assigned, orderNo)
 						ctx.Assigned[orderNo] = "done"
@@ -553,8 +554,8 @@ func (b *Bidder) Start(ctx *Context) {
 
 }
 
-func makeBid(amount string, wd selenium.WebDriver, amt string) error {
-	fmt.Println("make bid---->", amount, "amt:", amt)
+func makeBid(amount string, wd selenium.WebDriver, amt string, ot string) error {
+	fmt.Println("make bid---->", amount, "amt:", amt, "Order type:", ot)
 	elem, err := wd.FindElement(selenium.ByID, "id_bid")
 	if err != nil {
 		return err
