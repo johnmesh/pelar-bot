@@ -176,20 +176,8 @@ func (b *Bidder) Start(ctx *Context) {
 	elem.SendKeys(b.Account.Password)
 	wd.KeyDown(selenium.EnterKey)
 
-	/* wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
-		elem, _ := driver.FindElement(selenium.ByID, ORDER_LOADING)
-
-		if elem != nil {
-			text, _ := elem.Text()
-			if strings.ToLower(text) != "loading..." {
-				return true, nil
-			}
-		}
-
-		return false, nil
-	}, defaultTimeOut) */
-
 	wd.Get("https://essayshark.com/writer/orders/")
+
 	//Discard all orders
 	for {
 		var orders []selenium.WebElement
@@ -222,7 +210,7 @@ func (b *Bidder) Start(ctx *Context) {
 
 	}
 
-	//Start looking for work
+	//start looking for work
 	var count int
 	for {
 		fmt.Printf("[%d]:polling... \n", b.ID)
@@ -239,7 +227,7 @@ func (b *Bidder) Start(ctx *Context) {
 			continue
 
 		}
-		//fmt.Println("ORDERS--->", len(orders))
+		//fmt.Println("orders--->", len(orders))
 
 		var order selenium.WebElement
 		var orderNo string
