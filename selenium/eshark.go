@@ -410,11 +410,17 @@ func (b *Bidder) Start(ctx *Context) {
 			 * This section checks the order discipline
 			 */
 			elem, err = wd.FindElement(selenium.ByCSSSelector, ".fast_order_details")
-			elem, err = elem.FindElement(selenium.ByCSSSelector, ".d50")
-			elems, err := elem.FindElements(selenium.ByCSSSelector, "dl")
-			elem, err = elems[3].FindElement(selenium.ByCSSSelector, "dd")
-			discipline, _ := elem.Text()
-			fmt.Println("Order-Discipline----->", formatText(discipline))
+			if elem != nil {
+				elem, err = elem.FindElement(selenium.ByCSSSelector, ".d50")
+			}
+			if elem != nil {
+				elems, _ := elem.FindElements(selenium.ByCSSSelector, "dl")
+				elem, err = elems[3].FindElement(selenium.ByCSSSelector, "dd")
+				if elem != nil {
+					discipline, _ := elem.Text()
+					fmt.Println("Order-Discipline----->", formatText(discipline))
+				}
+			}
 
 			//download atleast one file
 			filepath :=
