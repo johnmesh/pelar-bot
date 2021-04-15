@@ -535,6 +535,7 @@ func (b *Bidder) Start(ctx *Context) {
 					for {
 						fmt.Println("Amount:", amount)
 						input, _ := wd.FindElement(selenium.ByID, "id_bid")
+						fmt.Println("Input:", input)
 						if input == nil {
 							ctx.Assigned[orderNo] = "done"
 							wd.Get("https://essayshark.com/writer/orders/")
