@@ -496,7 +496,7 @@ func (b *Bidder) Start(ctx *Context) {
 			start := time.Now()
 
 			// This is where the migic happens
-
+		Loop:
 			for countDown > 0 {
 				//watch the timer
 				elem, err = wd.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
@@ -531,7 +531,7 @@ func (b *Bidder) Start(ctx *Context) {
 				if tleft < 30 || diff < 30 {
 					fmt.Println("duration:", duration, "diff:", diff, "tleft:", tleft)
 					wd.Refresh()
-
+				Nested:
 					for {
 						fmt.Println("Amount:", amount)
 						input, _ := wd.FindElement(selenium.ByID, "id_bid")
@@ -539,7 +539,7 @@ func (b *Bidder) Start(ctx *Context) {
 						if input == nil {
 							ctx.Assigned[orderNo] = "done"
 							wd.Get("https://essayshark.com/writer/orders/")
-							break
+							break Nested
 
 						}
 						input.Clear()
@@ -548,7 +548,7 @@ func (b *Bidder) Start(ctx *Context) {
 
 						wd.Refresh()
 					}
-					break
+					break Loop
 
 					//The bidding has ended.This prevents infinite loops
 					//fmt.Println("The countdown has ended")
