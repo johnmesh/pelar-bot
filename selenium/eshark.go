@@ -231,10 +231,10 @@ func (b *Bidder) Start(ctx *Context) {
 		}
 		//fmt.Println("orders--->", len(orders))
 
-		var order selenium.WebElement
+		//var order selenium.WebElement
 		var orderNo string
 		for i := range orders {
-			order = nil
+			//order = nil
 			dataID, err := orders[i].GetAttribute("data-id")
 			//fmt.Println("orderNo", i)
 
@@ -255,9 +255,9 @@ func (b *Bidder) Start(ctx *Context) {
 		}
 
 		if orderNo != "" {
-			order = nil
-			order, _ = wd.FindElement(selenium.ByXPATH, "//tr[@data-id ='"+orderNo+"']")
-			od, _ := order.Text()
+			//order = nil
+			//order, _ = wd.FindElement(selenium.ByXPATH, "//tr[@data-id ='"+orderNo+"']")
+			/* od, _ := order.Text()
 			fmt.Println("-----------------------------------------------", orderNo)
 			fmt.Println(od)
 			fmt.Println("-----------------------------------------------")
@@ -284,8 +284,8 @@ func (b *Bidder) Start(ctx *Context) {
 			if err != nil {
 				//delete(ctx.Assigned, orderNo)
 				//continue
-			}
-			var noOfPages string
+			} */
+			/* 	var noOfPages string
 			if elem != nil {
 				pages, err := elem.Text()
 				if err != nil {
@@ -297,11 +297,11 @@ func (b *Bidder) Start(ctx *Context) {
 				fmt.Println("No of Pages--->", noOfPages)
 			} else {
 				wd.Refresh()
-			}
+			} */
 			/*
 			 * This section gets the order deadline
 			 */
-			elem, err = order.FindElement(selenium.ByCSSSelector, ".td_deadline")
+			/* elem, err = order.FindElement(selenium.ByCSSSelector, ".td_deadline")
 			if elem != nil {
 				elem, err = elem.FindElement(selenium.ByCSSSelector, ".d-left")
 				if err != nil {
@@ -322,12 +322,12 @@ func (b *Bidder) Start(ctx *Context) {
 				fmt.Println("Deadline--->", d)
 			} else {
 				wd.Refresh()
-			}
+			} */
 
 			/*
 			 * This section checks the customer ratings
 			 */
-			elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
+			/* elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
 			if elem != nil {
 				elem, err = elem.FindElement(selenium.ByCSSSelector, ".customer-rating")
 				var customerRating string
@@ -342,12 +342,12 @@ func (b *Bidder) Start(ctx *Context) {
 				fmt.Println("Customer Rating--->", customerRating)
 			} else {
 				wd.Refresh()
-			}
+			} */
 
 			/*
 			 * This section checks the customer status
 			 */
-			elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
+			/* 	elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
 			if elem != nil {
 				elem, err = elem.FindElement(selenium.ByTagName, "a")
 				if elem != nil {
@@ -356,12 +356,12 @@ func (b *Bidder) Start(ctx *Context) {
 				}
 			} else {
 				wd.Refresh()
-			}
+			} */
 
 			/*
 			 * This section checks the budget amount
 			 */
-			var minBid float64
+			/* 	var minBid float64
 			elem, err = order.FindElement(selenium.ByCSSSelector, ".budget")
 			if elem != nil {
 				elem, err = elem.FindElement(selenium.ByCSSSelector, ".amount")
@@ -383,12 +383,12 @@ func (b *Bidder) Start(ctx *Context) {
 
 			} else {
 				wd.Refresh()
-			}
+			} */
 
 			/*
 			 * This section checks if its a new custmomer
 			 */
-			elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
+			/* 	elem, err = order.FindElement(selenium.ByCSSSelector, ".order_number")
 			if elem != nil {
 				elem, err = elem.FindElement(selenium.ByCSSSelector, ".new-customer")
 				var newCustomer string
@@ -403,7 +403,7 @@ func (b *Bidder) Start(ctx *Context) {
 				fmt.Println("New Customer--->", newCustomer)
 			} else {
 				wd.Refresh()
-			}
+			} */
 
 			wd.Get("https://essayshark.com/writer/orders/" + orderNo + ".html")
 			wd.Refresh()
@@ -436,8 +436,8 @@ func (b *Bidder) Start(ctx *Context) {
 					//unable to donwload file
 				}
 			}
-			amount := fmt.Sprintf("%.2f", minBid)
-
+			//amount := fmt.Sprintf("%.2f", minBid)
+			var amount string
 			/*
 			 * This section checks the remommended bidding amount
 			 */
@@ -458,7 +458,7 @@ func (b *Bidder) Start(ctx *Context) {
 
 				if amt != "" {
 					amount = amt
-				} else if noOfPages == "" {
+				} else if amount == "" {
 					amount = r
 				}
 
@@ -474,7 +474,7 @@ func (b *Bidder) Start(ctx *Context) {
 					return timer != "", nil
 				}
 				//try bidding here
-				if err := makeBid(amount, wd, amt, orderType); err != nil {
+				if err := makeBid(amount, wd, amt, 0); err != nil {
 					elem = nil
 					return true, nil
 				}
@@ -491,11 +491,12 @@ func (b *Bidder) Start(ctx *Context) {
 				continue
 				//try bidding here
 			}
-
+			//input, err := wd.FindElement(selenium.ByID, "id_bid")
 			countDown, _ := strconv.Atoi(timer)
 			start := time.Now()
 
 			// This is where the migic happens
+
 			for countDown > 0 {
 				//watch the timer
 				elem, err = wd.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
@@ -503,7 +504,7 @@ func (b *Bidder) Start(ctx *Context) {
 				if elem == nil {
 					//no count down
 					//try bidding
-					wd.Refresh()
+					//wd.Refresh()
 					fmt.Println("no count down--->", err)
 				} else {
 					timer, err = elem.Text()
@@ -514,29 +515,47 @@ func (b *Bidder) Start(ctx *Context) {
 				duration := int(d)
 				diff := countDown - duration
 
-				if tleft < 30 || diff < 30 {
+				/* if tleft < 30 || diff < 30 {
 					fmt.Println("countdown", diff)
 					//bid here
-					wd.Refresh()
-					if err := makeBid(amount, wd, amt, orderType); err != nil {
+
+					if err := makeBid(amount, wd, amt, orderType, countDown); err != nil {
 						//Remove the order from the list
 						//delete(ctx.Assigned, orderNo)
-						ctx.Assigned[orderNo] = "done"
-						wd.Get("https://essayshark.com/writer/orders/")
-						break
+
 					}
-
+					//wd.Refresh()
 					//fmt.Println("bidding here")
-				}
+				} */
 
-				if duration >= countDown {
+				if tleft < 30 || diff < 30 {
+					fmt.Println("duration:", duration, "diff:", diff, "tleft:", tleft)
+					wd.Refresh()
+
+					for {
+						fmt.Println("Amount:", amount)
+						input, _ := wd.FindElement(selenium.ByID, "id_bid")
+						if input == nil {
+							ctx.Assigned[orderNo] = "done"
+							wd.Get("https://essayshark.com/writer/orders/")
+							break
+
+						}
+						input.Clear()
+						input.SendKeys(amount)
+						wd.KeyDown(selenium.EnterKey)
+
+						wd.Refresh()
+					}
+					break
+
 					//The bidding has ended.This prevents infinite loops
-					fmt.Println("The countdown has ended")
+					//fmt.Println("The countdown has ended")
 					//Remove the order from the list
 					//delete(ctx.Assigned, orderNo)
-					ctx.Assigned[orderNo] = "done"
-					wd.Get("https://essayshark.com/writer/orders/")
-					break
+					//ctx.Assigned[orderNo] = "done"
+					//wd.Get("https://essayshark.com/writer/orders/")
+
 				}
 
 			}
@@ -554,8 +573,8 @@ func (b *Bidder) Start(ctx *Context) {
 
 }
 
-func makeBid(amount string, wd selenium.WebDriver, amt string, ot string) error {
-	fmt.Println("make bid---->", amount, "amt:", amt, "Order type:", ot)
+func makeBid(amount string, wd selenium.WebDriver, amt string, countDown int) error {
+	fmt.Println("make bid---->", amount, "amt:", amt, "Count down:", countDown)
 	elem, err := wd.FindElement(selenium.ByID, "id_bid")
 	if err != nil {
 		return err
@@ -564,11 +583,18 @@ func makeBid(amount string, wd selenium.WebDriver, amt string, ot string) error 
 	elem.SendKeys(amount)
 	wd.KeyDown(selenium.EnterKey)
 
-	elem, err = wd.FindElement(selenium.ByID, "apply_order")
-	if err != nil {
-
-		return err
+	/* elem, err = wd.FindElement(selenium.ByID, "apply_order")
+	if elem == nil {
+		//return errors.New("elem not found")
+	} else {
+		//elem.Click()
 	}
+	/* if err = elem.Click(); err != nil {
+		return err
+	} */
+	/* if err != nil {
+		return err
+	} */
 	return nil
 }
 
