@@ -533,7 +533,7 @@ func (b *Bidder) Start(ctx *Context) {
 					wd.Refresh()
 				Nested:
 					for {
-						fmt.Println("Amount:", amount)
+						fmt.Println("OrderNo:", orderNo, "Amount:", amount)
 						input, _ := wd.FindElement(selenium.ByID, "id_bid")
 						fmt.Println("Input:", input)
 						if input == nil {
