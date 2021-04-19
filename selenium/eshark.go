@@ -216,6 +216,7 @@ func (b *Bidder) Start(ctx *Context) {
 	var count int
 	for {
 		fmt.Printf("[%d]:polling... \n", b.ID)
+		wd.Refresh()
 		//Refresh the page to prevent the site from loggin out.
 		if count > 1000 {
 			wd.Get("https://essayshark.com/writer/orders/")
