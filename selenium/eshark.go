@@ -518,7 +518,7 @@ func (b *Bidder) Start(ctx *Context) {
 				if err = makeBid(amount, wd, amt, 0); err != nil {
 					return true, nil
 				}
-				wd.Refresh()
+				//wd.Refresh()
 
 				return false, nil
 			}, timeout, 10*time.Millisecond)
