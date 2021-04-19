@@ -236,6 +236,10 @@ func (b *Bidder) Start(ctx *Context) {
 			return false, nil
 		}, 60*time.Second)
 
+		if len(orders) < 1 {
+			continue
+		}
+
 		//fmt.Println("orders--->", len(orders))
 
 		//var order selenium.WebElement
