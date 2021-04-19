@@ -225,11 +225,16 @@ func (b *Bidder) Start(ctx *Context) {
 		count++
 
 		var orders []selenium.WebElement
-		orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
-		if err != nil {
-			continue
 
-		}
+		wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+			orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
+			if len(orders) > 0 {
+				return true, nil
+			}
+
+			return false, nil
+		}, 5*time.Second)
+
 		//fmt.Println("orders--->", len(orders))
 
 		//var order selenium.WebElement
