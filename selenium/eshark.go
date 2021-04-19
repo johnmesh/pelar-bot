@@ -492,11 +492,33 @@ func (b *Bidder) Start(ctx *Context) {
 				//try bidding here
 			}
 			//input, err := wd.FindElement(selenium.ByID, "id_bid")
-			countDown, _ := strconv.Atoi(timer)
+			countDown, _ := strconv.ParseInt(timer, 10, 64)
+
 			start := time.Now()
+			timeout := time.Duration(countDown)*time.Second + 1
+
+			wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+				/* elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
+				if elem != nil {
+					timer, err = elem.Text()
+					return timer != "", nil
+				} */
+				//try bidding here
+				if err = makeBid(amount, wd, amt, 0); err != nil {
+					return true, nil
+				}
+				wd.Refresh()
+
+				return false, nil
+			}, timeout)
+
+			fmt.Println("Done:", time.Now().Sub(start).Seconds(), timeout, err)
+
+			ctx.Assigned[orderNo] = "done"
+			wd.Get("https://essayshark.com/writer/orders/")
 
 			// This is where the migic happens
-		Loop:
+			/* Loop:
 			for countDown > 0 {
 				//watch the timer
 				elem, err = wd.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
@@ -513,64 +535,64 @@ func (b *Bidder) Start(ctx *Context) {
 
 				d := time.Now().Sub(start).Seconds()
 				duration := int(d)
-				diff := countDown - duration
+				diff := countDown - duration */
 
-				/* if tleft < 30 || diff < 30 {
-					fmt.Println("countdown", diff)
-					//bid here
+			/* if tleft < 30 || diff < 30 {
+				fmt.Println("countdown", diff)
+				//bid here
 
-					if err := makeBid(amount, wd, amt, orderType, countDown); err != nil {
-						//Remove the order from the list
-						//delete(ctx.Assigned, orderNo)
-
-					}
-					//wd.Refresh()
-					//fmt.Println("bidding here")
-				} */
-
-				if tleft < 30 || diff < 30 {
-					fmt.Println("duration:", duration, "diff:", diff, "tleft:", tleft)
-					wd.Refresh()
-				Nested:
-					for {
-						fmt.Println("OrderNo:", orderNo, "Amount:", amount)
-						input, _ := wd.FindElement(selenium.ByID, "id_bid")
-						fmt.Println("Input:", input)
-						if input == nil {
-							ctx.Assigned[orderNo] = "done"
-							wd.Get("https://essayshark.com/writer/orders/")
-							break Nested
-
-						}
-						input.Clear()
-						input.SendKeys(amount)
-						wd.KeyDown(selenium.EnterKey)
-
-						//wd.Refresh()
-					}
-					break Loop
-
-					//The bidding has ended.This prevents infinite loops
-					//fmt.Println("The countdown has ended")
+				if err := makeBid(amount, wd, amt, orderType, countDown); err != nil {
 					//Remove the order from the list
 					//delete(ctx.Assigned, orderNo)
-					//ctx.Assigned[orderNo] = "done"
-					//wd.Get("https://essayshark.com/writer/orders/")
 
 				}
+				//wd.Refresh()
+				//fmt.Println("bidding here")
+			} */
 
-			}
+			/* 	if tleft < 30 || diff < 30 {
+				fmt.Println("duration:", duration, "diff:", diff, "tleft:", tleft)
+				wd.Refresh()
+			Nested:
+				for {
+					fmt.Println("OrderNo:", orderNo, "Amount:", amount)
+					input, _ := wd.FindElement(selenium.ByID, "id_bid")
+					fmt.Println("Input:", input)
+					if input == nil {
+						ctx.Assigned[orderNo] = "done"
+						wd.Get("https://essayshark.com/writer/orders/")
+						break Nested
 
-			/*
-			 * time.Sleep(2 * time.Second)
-			 * wd.ExecuteScript("scroll(2000, 200)", nil)
-			 * elem, err = wd.FindElement(selenium.ByXPATH, "//input[contains(@class,'discard')]")
-			 * elem.Click()
-			 */
+					}
+					input.Clear()
+					input.SendKeys(amount)
+					wd.KeyDown(selenium.EnterKey)
+
+					//wd.Refresh()
+				}
+				break Loop */
+
+			//The bidding has ended.This prevents infinite loops
+			//fmt.Println("The countdown has ended")
+			//Remove the order from the list
+			//delete(ctx.Assigned, orderNo)
+			//ctx.Assigned[orderNo] = "done"
+			//wd.Get("https://essayshark.com/writer/orders/")
 
 		}
 
 	}
+
+	/*
+	 * time.Sleep(2 * time.Second)
+	 * wd.ExecuteScript("scroll(2000, 200)", nil)
+	 * elem, err = wd.FindElement(selenium.ByXPATH, "//input[contains(@class,'discard')]")
+	 * elem.Click()
+	 */
+
+	//}
+
+	//}
 
 }
 
