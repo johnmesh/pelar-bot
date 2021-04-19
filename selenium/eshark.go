@@ -213,27 +213,28 @@ func (b *Bidder) Start(ctx *Context) {
 	}
 
 	//start looking for work
-	var count int
+	//var count int
 	for {
 		fmt.Printf("[%d]:polling... \n", b.ID)
-		wd.Refresh()
+		//wd.Refresh()
 		//Refresh the page to prevent the site from loggin out.
-		if count > 1000 {
+		/* 	if count > 1000 {
 			wd.Get("https://essayshark.com/writer/orders/")
 			count = 0
 		}
 		count++
-
+		*/
 		var orders []selenium.WebElement
 
 		wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+			wd.Refresh()
 			orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
 			if len(orders) > 0 {
 				return true, nil
 			}
 
 			return false, nil
-		}, 5*time.Second)
+		}, 60*time.Second)
 
 		//fmt.Println("orders--->", len(orders))
 
@@ -248,11 +249,11 @@ func (b *Bidder) Start(ctx *Context) {
 				continue
 			}
 
-			/* 	if _, ok := ctx.Assigned[dataID]; ok {
+			if _, ok := ctx.Assigned[dataID]; ok {
 				//The order is already taken
 				//fmt.Println("The order is already taken", dataID)
 				continue
-			} */
+			}
 			//Add the order to the list
 			ctx.Assigned[dataID] = "processing"
 			orderNo = dataID
