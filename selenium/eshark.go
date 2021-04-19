@@ -519,7 +519,7 @@ func (b *Bidder) Start(ctx *Context) {
 				duration := int(d)
 				diff := int(countDown) - duration
 
-				if diff < 2 {
+				if diff == 2 {
 					wd.Refresh()
 				}
 
