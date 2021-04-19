@@ -232,7 +232,7 @@ func (b *Bidder) Start(ctx *Context) {
 			if len(orders) > 0 {
 				return true, nil
 			}
-
+			wd.Refresh()
 			return false, nil
 		}, 60*time.Second, 12*time.Millisecond)
 
