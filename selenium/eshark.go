@@ -546,7 +546,7 @@ func (b *Bidder) Start(ctx *Context) {
 						input.SendKeys(amount)
 						wd.KeyDown(selenium.EnterKey)
 
-						wd.Refresh()
+						//wd.Refresh()
 					}
 					break Loop
 
