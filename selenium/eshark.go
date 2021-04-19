@@ -514,11 +514,19 @@ func (b *Bidder) Start(ctx *Context) {
 					timer, err = elem.Text()
 					return timer != "", nil
 				} */
+
+				d := time.Now().Sub(start).Seconds()
+				duration := int(d)
+				diff := int(countDown) - duration
+				if diff < 2 {
+					wd.Refresh()
+				}
+
 				//try bidding here
 				if err = makeBid(amount, wd, amt, 0); err != nil {
 					return true, nil
 				}
-				//wd.Refresh()
+				///wd.Refresh()
 
 				return false, nil
 			}, timeout, 10*time.Millisecond)
