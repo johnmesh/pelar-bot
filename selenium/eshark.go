@@ -226,7 +226,7 @@ func (b *Bidder) Start(ctx *Context) {
 		*/
 		var orders []selenium.WebElement
 		wd.Refresh()
-		wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 
 			orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
 			if len(orders) > 0 {
@@ -234,7 +234,7 @@ func (b *Bidder) Start(ctx *Context) {
 			}
 
 			return false, nil
-		}, 60*time.Second)
+		}, 60*time.Second, 12*time.Millisecond)
 
 		if len(orders) < 1 {
 			continue
@@ -508,7 +508,7 @@ func (b *Bidder) Start(ctx *Context) {
 			start := time.Now()
 			timeout := time.Duration(countDown)*time.Second + 1
 
-			wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+			wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 				/* elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
 				if elem != nil {
 					timer, err = elem.Text()
@@ -521,7 +521,7 @@ func (b *Bidder) Start(ctx *Context) {
 				wd.Refresh()
 
 				return false, nil
-			}, timeout)
+			}, timeout, 10*time.Millisecond)
 
 			fmt.Println("Done:", time.Now().Sub(start).Seconds(), timeout, err)
 
