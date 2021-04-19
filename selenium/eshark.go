@@ -225,9 +225,9 @@ func (b *Bidder) Start(ctx *Context) {
 		count++
 		*/
 		var orders []selenium.WebElement
-
+		wd.Refresh()
 		wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
-			wd.Refresh()
+
 			orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
 			if len(orders) > 0 {
 				return true, nil
