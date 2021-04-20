@@ -253,11 +253,11 @@ func (b *Bidder) Start(ctx *Context) {
 				continue
 			}
 
-			if _, ok := ctx.Assigned[dataID]; ok {
+			/* 	if _, ok := ctx.Assigned[dataID]; ok {
 				//The order is already taken
 				//fmt.Println("The order is already taken", dataID)
 				continue
-			}
+			} */
 			//Add the order to the list
 			ctx.Assigned[dataID] = "processing"
 			orderNo = dataID
