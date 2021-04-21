@@ -529,7 +529,7 @@ func (b *Bidder) Start(ctx *Context) {
 					/* 	if err = makeBid(amount, wd, amt, 0, bidInput); err != nil {
 						return true, nil
 					} */
-					makeBid(amount, wd, amt, 0, bidInput)
+					makeBid(amount, wd, amt, 1, bidInput)
 				}
 
 				//try bidding here
