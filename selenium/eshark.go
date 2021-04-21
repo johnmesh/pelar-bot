@@ -525,7 +525,7 @@ func (b *Bidder) Start(ctx *Context) {
 				duration := int(d)
 				diff := int(countDown) - duration
 
-				if diff < 2 {
+				if diff < 10 {
 					/* 	if err = makeBid(amount, wd, amt, 0, bidInput); err != nil {
 						return true, nil
 					} */
