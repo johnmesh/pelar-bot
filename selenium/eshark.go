@@ -230,7 +230,7 @@ func (b *Bidder) Start(ctx *Context) {
 
 			orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
 			if len(orders) > 0 {
-				fmt.Printf("[%d]:Orders... \n", b.ID)
+				fmt.Printf("[%d]:Orders---> %d\n", b.ID, len(orders))
 				return true, nil
 			}
 			//wd.Refresh()
