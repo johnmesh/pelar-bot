@@ -214,6 +214,7 @@ func (b *Bidder) Start(ctx *Context) {
 
 	//start looking for work
 	//var count int
+
 Polling:
 	for {
 		fmt.Printf("[%d]:polling... \n", b.ID)
@@ -226,9 +227,8 @@ Polling:
 		count++
 		*/
 		var orders []selenium.WebElement
-		wd.Refresh()
-		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 
+		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
 			if len(orders) > 0 {
 				fmt.Printf("[%d]:Orders---> %d\n", b.ID, len(orders))
@@ -236,9 +236,10 @@ Polling:
 			}
 			//wd.Refresh()
 			return false, nil
-		}, 60*time.Second, 1*time.Millisecond)
+		}, 2*time.Second, 1*time.Millisecond)
 
 		if len(orders) < 1 {
+			wd.Refresh()
 			continue Polling
 		}
 
