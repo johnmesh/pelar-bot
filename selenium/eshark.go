@@ -450,6 +450,8 @@ func (b *Bidder) Start(ctx *Context) {
 				wd.Refresh()
 			}
 
+			bidInput, err := wd.FindElement(selenium.ByID, "id_bid")
+
 			var timer string
 			wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 				elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
@@ -458,7 +460,7 @@ func (b *Bidder) Start(ctx *Context) {
 					return timer != "", nil
 				}
 				//try bidding here
-				if err := makeBid(amount, wd, amt, 0); err != nil {
+				if err := makeBid(amount, wd, amt, 0, bidInput); err != nil {
 					elem = nil
 					return true, nil
 				}
@@ -522,14 +524,13 @@ func (b *Bidder) Start(ctx *Context) {
 				duration := int(d)
 				diff := int(countDown) - duration
 
-				if diff == 2 {
-					wd.Refresh()
+				if diff < 2 {
+					if err = makeBid(amount, wd, amt, 0, bidInput); err != nil {
+						return true, nil
+					}
 				}
 
 				//try bidding here
-				if err = makeBid(amount, wd, amt, 0); err != nil {
-					return true, nil
-				}
 				///wd.Refresh()
 
 				return false, nil
@@ -619,12 +620,9 @@ func (b *Bidder) Start(ctx *Context) {
 
 }
 
-func makeBid(amount string, wd selenium.WebDriver, amt string, countDown int) error {
+func makeBid(amount string, wd selenium.WebDriver, amt string, countDown int, elem selenium.WebElement) error {
 	fmt.Println("make bid---->", amount, "amt:", amt, "Count down:", countDown)
-	elem, err := wd.FindElement(selenium.ByID, "id_bid")
-	if err != nil {
-		return err
-	}
+
 	elem.Clear()
 	elem.SendKeys(amount)
 	wd.KeyDown(selenium.EnterKey)
