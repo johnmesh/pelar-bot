@@ -214,6 +214,7 @@ func (b *Bidder) Start(ctx *Context) {
 
 	//start looking for work
 	//var count int
+Polling:
 	for {
 		fmt.Printf("[%d]:polling... \n", b.ID)
 		//wd.Refresh()
@@ -238,36 +239,37 @@ func (b *Bidder) Start(ctx *Context) {
 		}, 60*time.Second, 1*time.Millisecond)
 
 		if len(orders) < 1 {
-			continue
+			continue Polling
 		}
 
 		//fmt.Println("orders--->", len(orders))
 
 		//var order selenium.WebElement
 		var orderNo string
+	FindOrders:
 		for i := range orders {
 			//order = nil
 			dataID, err := orders[i].GetAttribute("data-id")
 			//fmt.Println("orderNo", i)
 
 			if err != nil {
-				continue
+				continue FindOrders
 			}
 
 			if _, ok := ctx.Assigned[dataID]; ok {
 				//The order is already taken
 				//fmt.Println("The order is already taken", dataID)
-				continue
+				continue FindOrders
 			}
 			//Add the order to the list
 			ctx.Assigned[dataID] = "processing"
 			orderNo = dataID
-			break
+			break FindOrders
 
 		}
 
 		if orderNo == "" {
-			continue
+			continue Polling
 		}
 		//order = nil
 		//order, _ = wd.FindElement(selenium.ByXPATH, "//tr[@data-id ='"+orderNo+"']")
@@ -418,7 +420,7 @@ func (b *Bidder) Start(ctx *Context) {
 		} else {
 			wd.Refresh()
 		} */
-
+		fmt.Printf("[%d]Opening--->%s", b.ID, orderNo)
 		wd.Get("https://essayshark.com/writer/orders/" + orderNo + ".html")
 		wd.Refresh()
 
@@ -478,7 +480,7 @@ func (b *Bidder) Start(ctx *Context) {
 			//delete(ctx.Assigned, orderNo)
 			ctx.Assigned[orderNo] = "done"
 			wd.Get("https://essayshark.com/writer/orders/")
-			continue
+			continue Polling
 			//try bidding here
 		}
 
@@ -545,7 +547,7 @@ func (b *Bidder) Start(ctx *Context) {
 
 		ctx.Assigned[orderNo] = "done"
 		wd.Get("https://essayshark.com/writer/orders/")
-		continue
+		continue Polling
 
 		// This is where the migic happens
 		/* Loop:
