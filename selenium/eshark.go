@@ -536,6 +536,7 @@ Polling:
 					return true, nil
 				} */
 				makeBid(amount, wd, amt, orderNo, bidInput, b.ID, diff)
+				wd.Refresh()
 			}
 
 			//try bidding here
