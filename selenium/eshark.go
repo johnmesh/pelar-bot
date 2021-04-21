@@ -460,10 +460,11 @@ func (b *Bidder) Start(ctx *Context) {
 					return timer != "", nil
 				}
 				//try bidding here
-				if err := makeBid(amount, wd, amt, 0, bidInput); err != nil {
+				/* 	if err := makeBid(amount, wd, amt, 0, bidInput); err != nil {
 					elem = nil
 					return true, nil
-				}
+				} */
+				makeBid(amount, wd, amt, 0, bidInput)
 
 				return false, nil
 			}, defaultTimeOut, 1*time.Millisecond)
@@ -525,9 +526,10 @@ func (b *Bidder) Start(ctx *Context) {
 				diff := int(countDown) - duration
 
 				if diff < 2 {
-					if err = makeBid(amount, wd, amt, 0, bidInput); err != nil {
+					/* 	if err = makeBid(amount, wd, amt, 0, bidInput); err != nil {
 						return true, nil
-					}
+					} */
+					makeBid(amount, wd, amt, 0, bidInput)
 				}
 
 				//try bidding here
