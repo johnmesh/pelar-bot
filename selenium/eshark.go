@@ -464,7 +464,7 @@ func (b *Bidder) Start(ctx *Context) {
 					elem = nil
 					return true, nil
 				} */
-				makeBid(amount, wd, amt, 0, bidInput)
+				makeBid(amount, wd, amt, 0, bidInput, b.ID)
 
 				return false, nil
 			}, defaultTimeOut, 1*time.Millisecond)
@@ -529,7 +529,7 @@ func (b *Bidder) Start(ctx *Context) {
 					/* 	if err = makeBid(amount, wd, amt, 0, bidInput); err != nil {
 						return true, nil
 					} */
-					makeBid(amount, wd, amt, 1, bidInput)
+					makeBid(amount, wd, amt, 1, bidInput, b.ID)
 				}
 
 				//try bidding here
@@ -622,8 +622,8 @@ func (b *Bidder) Start(ctx *Context) {
 
 }
 
-func makeBid(amount string, wd selenium.WebDriver, amt string, countDown int, elem selenium.WebElement) error {
-	fmt.Println("make bid---->", amount, "amt:", amt, "Count down:", countDown)
+func makeBid(amount string, wd selenium.WebDriver, amt string, countDown int, elem selenium.WebElement, id int) error {
+	fmt.Println("make bid---->", amount, "amt:", amt, "Count down:", countDown, "ID:", id)
 
 	elem.Clear()
 	elem.SendKeys(amount)
