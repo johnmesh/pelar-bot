@@ -234,7 +234,7 @@ func (b *Bidder) Start(ctx *Context) {
 			}
 			//wd.Refresh()
 			return false, nil
-		}, 60*time.Second, 10*time.Millisecond)
+		}, 60*time.Second, 1*time.Millisecond)
 
 		if len(orders) < 1 {
 			continue
@@ -253,11 +253,11 @@ func (b *Bidder) Start(ctx *Context) {
 				continue
 			}
 
-			/* 	if _, ok := ctx.Assigned[dataID]; ok {
+			if _, ok := ctx.Assigned[dataID]; ok {
 				//The order is already taken
 				//fmt.Println("The order is already taken", dataID)
 				continue
-			} */
+			}
 			//Add the order to the list
 			ctx.Assigned[dataID] = "processing"
 			orderNo = dataID
@@ -419,35 +419,8 @@ func (b *Bidder) Start(ctx *Context) {
 			wd.Get("https://essayshark.com/writer/orders/" + orderNo + ".html")
 			wd.Refresh()
 
-			/*
-			 * This section checks the order discipline
-			 */
-			elem, err = wd.FindElement(selenium.ByCSSSelector, ".fast_order_details")
-			if elem != nil {
-				elem, err = elem.FindElement(selenium.ByCSSSelector, ".d50")
-			}
-			if elem != nil {
-				elems, _ := elem.FindElements(selenium.ByCSSSelector, "dl")
-				elem, err = elems[3].FindElement(selenium.ByCSSSelector, "dd")
-				if elem != nil {
-					discipline, _ := elem.Text()
-					fmt.Println("Order-Discipline----->", formatText(discipline))
-				}
-			}
-
-			//download atleast one file
-			filepath :=
-				"//div[@class='paper_instructions_view']/a[contains (@data-url-raw,'/writer/get_additional_material.html')]"
-			elem, err = wd.FindElement(selenium.ByXPATH, filepath)
-			if elem == nil {
-				fmt.Println("No files to donwnload", err)
-			} else {
-				wd.ExecuteScript("scroll(2000, 200)", nil)
-				if err = elem.Click(); err != nil {
-					//unable to donwload file
-				}
-			}
 			//amount := fmt.Sprintf("%.2f", minBid)
+
 			var amount string
 			/*
 			 * This section checks the remommended bidding amount
@@ -478,7 +451,7 @@ func (b *Bidder) Start(ctx *Context) {
 			}
 
 			var timer string
-			wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+			wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 				elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
 				if elem != nil {
 					timer, err = elem.Text()
@@ -491,7 +464,7 @@ func (b *Bidder) Start(ctx *Context) {
 				}
 
 				return false, nil
-			}, defaultTimeOut)
+			}, defaultTimeOut, 1*time.Millisecond)
 
 			if elem == nil {
 				fmt.Println("element not found:----->", err)
@@ -502,6 +475,36 @@ func (b *Bidder) Start(ctx *Context) {
 				continue
 				//try bidding here
 			}
+
+			/*
+			 * This section checks the order discipline
+			 */
+			elem, err = wd.FindElement(selenium.ByCSSSelector, ".fast_order_details")
+			if elem != nil {
+				elem, err = elem.FindElement(selenium.ByCSSSelector, ".d50")
+			}
+			if elem != nil {
+				elems, _ := elem.FindElements(selenium.ByCSSSelector, "dl")
+				elem, err = elems[3].FindElement(selenium.ByCSSSelector, "dd")
+				if elem != nil {
+					discipline, _ := elem.Text()
+					fmt.Println("Order-Discipline----->", formatText(discipline))
+				}
+			}
+
+			//download atleast one file
+			filepath :=
+				"//div[@class='paper_instructions_view']/a[contains (@data-url-raw,'/writer/get_additional_material.html')]"
+			elem, err = wd.FindElement(selenium.ByXPATH, filepath)
+			if elem == nil {
+				fmt.Println("No files to donwnload", err)
+			} else {
+				wd.ExecuteScript("scroll(2000, 200)", nil)
+				if err = elem.Click(); err != nil {
+					//unable to donwload file
+				}
+			}
+
 			//input, err := wd.FindElement(selenium.ByID, "id_bid")
 			countDown, _ := strconv.ParseInt(timer, 10, 64)
 
@@ -530,7 +533,7 @@ func (b *Bidder) Start(ctx *Context) {
 				///wd.Refresh()
 
 				return false, nil
-			}, timeout, 10*time.Millisecond)
+			}, timeout, 1*time.Millisecond)
 
 			fmt.Println("Done:", time.Now().Sub(start).Seconds(), timeout, err)
 
