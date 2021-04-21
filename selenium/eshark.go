@@ -227,7 +227,7 @@ Polling:
 		count++
 		*/
 		var orders []selenium.WebElement
-
+		wd.Refresh()
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
 			if len(orders) > 0 {
@@ -239,8 +239,8 @@ Polling:
 		}, 2*time.Second, 1*time.Millisecond)
 
 		if len(orders) < 1 {
-			wd.Refresh()
 			continue Polling
+
 		}
 
 		//fmt.Println("orders--->", len(orders))
