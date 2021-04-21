@@ -533,8 +533,9 @@ Polling:
 				/* 	if err = makeBid(amount, wd, amt, 0, bidInput); err != nil {
 					return true, nil
 				} */
-				makeBid(amount, wd, amt, orderNo, b.ID, diff)
 				wd.Refresh()
+				makeBid(amount, wd, amt, orderNo, b.ID, diff)
+
 			}
 
 			//try bidding here
