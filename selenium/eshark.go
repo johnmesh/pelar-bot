@@ -456,8 +456,6 @@ Polling:
 			wd.Refresh()
 		}
 
-		bidInput, err := wd.FindElement(selenium.ByID, "id_bid")
-
 		var timer string
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
@@ -470,7 +468,7 @@ Polling:
 				elem = nil
 				return true, nil
 			} */
-			makeBid(amount, wd, amt, orderNo, bidInput, b.ID, 0)
+			makeBid(amount, wd, amt, orderNo, b.ID, 0)
 
 			return false, nil
 		}, defaultTimeOut, 1*time.Millisecond)
@@ -535,7 +533,7 @@ Polling:
 				/* 	if err = makeBid(amount, wd, amt, 0, bidInput); err != nil {
 					return true, nil
 				} */
-				makeBid(amount, wd, amt, orderNo, bidInput, b.ID, diff)
+				makeBid(amount, wd, amt, orderNo, b.ID, diff)
 				wd.Refresh()
 			}
 
@@ -628,9 +626,9 @@ Polling:
 
 }
 
-func makeBid(amount string, wd selenium.WebDriver, amt string, orderNo string, elem selenium.WebElement, id int, countDown int) error {
+func makeBid(amount string, wd selenium.WebDriver, amt string, orderNo string, id int, countDown int) error {
 	fmt.Println("make bid---->", amount, "amt:", amt, "#Order:", orderNo, "ID:", id, "Count Down:", countDown)
-
+	elem, _ := wd.FindElement(selenium.ByID, "id_bid")
 	elem.Clear()
 	elem.SendKeys(amount)
 	wd.KeyDown(selenium.EnterKey)
