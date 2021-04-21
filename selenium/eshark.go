@@ -538,10 +538,11 @@ func (b *Bidder) Start(ctx *Context) {
 				return false, nil
 			}, timeout, 1*time.Millisecond)
 
-			fmt.Println("Done:", time.Now().Sub(start).Seconds(), timeout, err)
+			fmt.Printf("[%d]:Done:", b.ID, time.Now().Sub(start).Seconds(), timeout, err)
 
 			ctx.Assigned[orderNo] = "done"
 			wd.Get("https://essayshark.com/writer/orders/")
+			continue
 
 			// This is where the migic happens
 			/* Loop:
