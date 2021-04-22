@@ -138,7 +138,6 @@ func (b *Bidder) Start(ctx *Context) {
 	defer wd.Quit()
 
 	fmt.Println("-----Driver started successfully------")
-	fmt.Println(wd)
 
 	// Navigate to the esshayshark page.
 	if err := wd.Get("https://essayshark.com/"); err != nil {
@@ -632,7 +631,12 @@ func makeBid(amount string, wd selenium.WebDriver, amt string, orderNo string, i
 	if elem != nil {
 		elem.Clear()
 		elem.SendKeys(amount)
-		wd.KeyDown(selenium.EnterKey)
+		//wd.KeyDown(selenium.EnterKey)
+		elem, _ = wd.FindElement(selenium.ByID, "apply_order")
+		if elem != nil {
+			elem.Click()
+		}
+
 	}
 
 	/* elem, err = wd.FindElement(selenium.ByID, "apply_order")
