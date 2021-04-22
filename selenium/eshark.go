@@ -117,11 +117,10 @@ func (b *Bidder) Start(ctx *Context) {
 		Args: []string{
 			"--headless",
 			"--no-sandbox",
-			"--window-size=60,75",
+			"--window-size=200,250",
 			"--disable-dev-shm-usage",
 			"--disable-gpu",
 			"--dns-prefetch-disable",
-			"--window-size=1920,1080",
 			"enable-automation",
 		},
 		Path: "/usr/bin/google-chrome",
@@ -134,7 +133,7 @@ func (b *Bidder) Start(ctx *Context) {
 	if err != nil {
 		panic(err)
 	}
-	wd.ResizeWindow("", 60, 75)
+	wd.ResizeWindow("", 200, 250)
 	defer wd.Quit()
 
 	fmt.Println("-----Driver started successfully------")
