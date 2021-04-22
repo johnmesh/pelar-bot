@@ -111,7 +111,7 @@ func (b *Bidder) Start(ctx *Context) {
 	}
 
 	// Connect to the WebDriver instance running locally.
-	caps := selenium.Capabilities{"browserName": "chrome", "pageLoadStrategy": "eager"}
+	caps := selenium.Capabilities{"browserName": "chrome", "pageLoadStrategy": "none"}
 
 	chromeCaps := chrome.Capabilities{
 		Args: []string{
