@@ -117,7 +117,7 @@ func (b *Bidder) Start(ctx *Context) {
 		Args: []string{
 			"--headless",
 			"--no-sandbox",
-			"--window-size=200,250",
+			"--window-size=390,480",
 			"--disable-dev-shm-usage",
 			"--disable-gpu",
 			"--dns-prefetch-disable",
@@ -133,7 +133,7 @@ func (b *Bidder) Start(ctx *Context) {
 	if err != nil {
 		panic(err)
 	}
-	wd.ResizeWindow("", 200, 250)
+	wd.ResizeWindow("", 390, 480)
 	defer wd.Quit()
 
 	fmt.Println("-----Driver started successfully------")
