@@ -529,14 +529,8 @@ Polling:
 			duration := int(d)
 			diff := int(countDown) - duration
 
-			if diff < 10 {
-				/* 	if err = makeBid(amount, wd, amt, 0, bidInput); err != nil {
-					return true, nil
-				} */
-				wd.Refresh()
-				makeBid(amount, wd, amt, orderNo, b.ID, diff)
-
-			}
+			wd.Refresh()
+			makeBid(amount, wd, amt, orderNo, b.ID, diff)
 
 			//try bidding here
 			///wd.Refresh()
