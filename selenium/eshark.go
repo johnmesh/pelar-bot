@@ -134,7 +134,7 @@ func (b *Bidder) Start(ctx *Context) {
 	if err != nil {
 		panic(err)
 	}
-	wd.ResizeWindow("", 60, 750)
+	wd.ResizeWindow("", 600, 750)
 	defer wd.Quit()
 
 	fmt.Println("-----Driver started successfully------")
