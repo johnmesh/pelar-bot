@@ -138,6 +138,7 @@ func (b *Bidder) Start(ctx *Context) {
 	defer wd.Quit()
 
 	fmt.Println("-----Driver started successfully------")
+	fmt.Println(wd)
 
 	// Navigate to the esshayshark page.
 	if err := wd.Get("https://essayshark.com/"); err != nil {
