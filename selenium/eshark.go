@@ -121,6 +121,7 @@ func (b *Bidder) Start(ctx *Context) {
 			"--disable-dev-shm-usage",
 			"--disable-gpu",
 			"--dns-prefetch-disable",
+			"--window-size=1920,1080",
 			"enable-automation",
 		},
 		Path: "/usr/bin/google-chrome",
