@@ -529,13 +529,12 @@ Polling:
 				return timer != "", nil
 			} */
 
-			/* 	d := time.Now().Sub(start).Seconds()
+			d := time.Now().Sub(start).Seconds()
 			duration := int(d)
-			diff := int(countDown) - duration */
+			diff := int(countDown) - duration
 			wd.Refresh()
-			wd.KeyDown(selenium.EnterKey)
 
-			//makeBid(amount, wd, amt, orderNo, b.ID, diff)
+			makeBid(amount, wd, amt, orderNo, b.ID, diff)
 			//try bidding here
 			///wd.Refresh()
 
