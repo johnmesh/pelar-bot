@@ -534,9 +534,13 @@ Polling:
 			diff := int(countDown) - duration
 			if diff == 10 {
 				wd.Refresh()
-			}
+				input, _ := wd.FindElement(selenium.ByID, "id_bid")
+				input.SendKeys(amount)
 
-			makeBid(amount, wd, amt, orderNo, b.ID, diff)
+			}
+			wd.KeyDown(selenium.EnterKey)
+
+			//makeBid(amount, wd, amt, orderNo, b.ID, diff)
 
 			//try bidding here
 			///wd.Refresh()
