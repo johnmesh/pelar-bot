@@ -547,7 +547,7 @@ Polling:
 			return false, nil
 		}, timeout, 1*time.Millisecond)
 
-		fmt.Println("[%d]:Done:%d%v%v%s", b.ID, time.Now().Sub(start).Seconds(), timeout, err.Error())
+		fmt.Println("[%d]:Done:%d%v%v%s", b.ID, time.Now().Sub(start).Seconds(), timeout, err)
 
 		ctx.Assigned[orderNo] = "done"
 		wd.Get("https://essayshark.com/writer/orders/")
