@@ -111,12 +111,13 @@ func (b *Bidder) Start(ctx *Context) {
 	}
 
 	// Connect to the WebDriver instance running locally.
-	caps := selenium.Capabilities{"browserName": "chrome", "pageLoadStrategy": "none"}
+	caps := selenium.Capabilities{"browserName": "chrome", "pageLoadStrategy": "eager"}
 
 	chromeCaps := chrome.Capabilities{
 		Args: []string{
 			"--headless",
 			"--no-sandbox",
+			"--window-size=600,750",
 			"--disable-dev-shm-usage",
 			"--disable-gpu",
 			"--dns-prefetch-disable",
@@ -132,7 +133,7 @@ func (b *Bidder) Start(ctx *Context) {
 	if err != nil {
 		panic(err)
 	}
-	wd.ResizeWindow("", 600, 750)
+	wd.ResizeWindow("", 60, 750)
 	defer wd.Quit()
 
 	fmt.Println("-----Driver started successfully------")
@@ -144,11 +145,10 @@ func (b *Bidder) Start(ctx *Context) {
 
 	elem, err := wd.FindElement(selenium.ByID, "es-cookie-button-submit")
 	if err != nil {
-		//panic(err)
+		panic(err)
 	}
-	if elem != nil {
-		elem.Click()
-	}
+
+	elem.Click()
 
 	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
 		elem, _ := driver.FindElement(selenium.ByID, LOGIN_ACCOUNT_LINK_ID)
