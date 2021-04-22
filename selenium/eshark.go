@@ -532,8 +532,10 @@ Polling:
 			d := time.Now().Sub(start).Seconds()
 			duration := int(d)
 			diff := int(countDown) - duration
+			if diff == 10 {
+				wd.Refresh()
+			}
 
-			wd.Refresh()
 			makeBid(amount, wd, amt, orderNo, b.ID, diff)
 
 			//try bidding here
@@ -631,11 +633,7 @@ func makeBid(amount string, wd selenium.WebDriver, amt string, orderNo string, i
 	if elem != nil {
 		elem.Clear()
 		elem.SendKeys(amount)
-		//wd.KeyDown(selenium.EnterKey)
-		elem, _ = wd.FindElement(selenium.ByID, "apply_order")
-		if elem != nil {
-			elem.Click()
-		}
+		wd.KeyDown(selenium.EnterKey)
 
 	}
 
