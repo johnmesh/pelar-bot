@@ -517,7 +517,7 @@ Polling:
 		countDown, _ := strconv.ParseInt(timer, 10, 64)
 
 		start := time.Now()
-		timeout := time.Duration(countDown)*time.Second + 1
+		timeout := time.Duration(countDown)*time.Second + 2
 		input, _ := wd.FindElement(selenium.ByID, "id_bid")
 		input.SendKeys(amount)
 
@@ -535,6 +535,10 @@ Polling:
 			//wd.Refresh()
 
 			wd.KeyDown(selenium.EnterKey)
+			input, _ := wd.FindElement(selenium.ByID, "id_bid")
+			if input == nil {
+				return true, nil
+			}
 			//makeBid(amount, wd, amt, orderNo, b.ID, diff)
 
 			//try bidding here
