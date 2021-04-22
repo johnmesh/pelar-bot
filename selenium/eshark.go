@@ -149,8 +149,9 @@ func (b *Bidder) Start(ctx *Context) {
 	if err != nil {
 		//panic(err)
 	}
-
-	elem.Click()
+	if elem != nil {
+		elem.Click()
+	}
 
 	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
 		elem, _ := driver.FindElement(selenium.ByID, LOGIN_ACCOUNT_LINK_ID)
