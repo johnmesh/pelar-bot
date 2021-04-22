@@ -147,7 +147,7 @@ func (b *Bidder) Start(ctx *Context) {
 
 	elem, err := wd.FindElement(selenium.ByID, "es-cookie-button-submit")
 	if err != nil {
-		panic(err)
+		//panic(err)
 	}
 
 	elem.Click()
