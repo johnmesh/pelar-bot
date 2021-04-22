@@ -468,6 +468,7 @@ Polling:
 				elem = nil
 				return true, nil
 			} */
+			wd.Refresh()
 			makeBid(amount, wd, amt, orderNo, b.ID, 0)
 
 			return false, nil
@@ -517,6 +518,8 @@ Polling:
 
 		start := time.Now()
 		timeout := time.Duration(countDown)*time.Second + 1
+		input, _ := wd.FindElement(selenium.ByID, "id_bid")
+		input.SendKeys(amount)
 
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			/* elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
@@ -525,12 +528,14 @@ Polling:
 				return timer != "", nil
 			} */
 
-			d := time.Now().Sub(start).Seconds()
+			/* 	d := time.Now().Sub(start).Seconds()
 			duration := int(d)
-			diff := int(countDown) - duration
+			diff := int(countDown) - duration */
 
-			wd.Refresh()
-			makeBid(amount, wd, amt, orderNo, b.ID, diff)
+			//wd.Refresh()
+
+			wd.KeyDown(selenium.EnterKey)
+			//makeBid(amount, wd, amt, orderNo, b.ID, diff)
 
 			//try bidding here
 			///wd.Refresh()
