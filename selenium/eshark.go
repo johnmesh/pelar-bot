@@ -518,6 +518,8 @@ Polling:
 
 		start := time.Now()
 		timeout := time.Duration(countDown)*time.Second + 1
+		input, _ := wd.FindElement(selenium.ByID, "id_bid")
+		input.SendKeys(amount)
 
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			/* elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
@@ -530,16 +532,8 @@ Polling:
 			duration := int(d)
 			diff := int(countDown) - duration
 
-			if diff == 3 {
-				wd.Refresh()
-				input, _ := wd.FindElement(selenium.ByID, "id_bid")
-				input.SendKeys(amount)
-			}
-			//wd.Refresh()
-
-			wd.KeyDown(selenium.EnterKey)
-
-			//makeBid(amount, wd, amt, orderNo, b.ID, diff)
+			wd.Refresh()
+			makeBid(amount, wd, amt, orderNo, b.ID, diff)
 
 			//try bidding here
 			///wd.Refresh()
