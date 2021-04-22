@@ -538,7 +538,7 @@ Polling:
 			return false, nil
 		}, timeout, 1*time.Millisecond)
 
-		fmt.Println("[%d]:Done:%d%f%d%v", b.ID, time.Now().Sub(start).Seconds(), timeout, err)
+		fmt.Println("[%d]:Done:%d%v%v%s", b.ID, time.Now().Sub(start).Seconds(), timeout, err.Error())
 
 		ctx.Assigned[orderNo] = "done"
 		wd.Get("https://essayshark.com/writer/orders/")
@@ -624,9 +624,11 @@ Polling:
 func makeBid(amount string, wd selenium.WebDriver, amt string, orderNo string, id int, countDown int) error {
 	fmt.Println("make bid---->", amount, "amt:", amt, "#Order:", orderNo, "ID:", id, "Count Down:", countDown)
 	elem, _ := wd.FindElement(selenium.ByID, "id_bid")
-	elem.Clear()
-	elem.SendKeys(amount)
-	wd.KeyDown(selenium.EnterKey)
+	if elem != nil {
+		elem.Clear()
+		elem.SendKeys(amount)
+		wd.KeyDown(selenium.EnterKey)
+	}
 
 	/* elem, err = wd.FindElement(selenium.ByID, "apply_order")
 	if elem == nil {
