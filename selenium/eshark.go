@@ -111,13 +111,12 @@ func (b *Bidder) Start(ctx *Context) {
 	}
 
 	// Connect to the WebDriver instance running locally.
-	caps := selenium.Capabilities{"browserName": "chrome", "pageLoadStrategy": "eager"}
+	caps := selenium.Capabilities{"browserName": "chrome", "pageLoadStrategy": "none"}
 
 	chromeCaps := chrome.Capabilities{
 		Args: []string{
 			"--headless",
 			"--no-sandbox",
-			"--window-size=390,480",
 			"--disable-dev-shm-usage",
 			"--disable-gpu",
 			"--dns-prefetch-disable",
@@ -133,7 +132,7 @@ func (b *Bidder) Start(ctx *Context) {
 	if err != nil {
 		panic(err)
 	}
-	wd.ResizeWindow("", 390, 480)
+
 	defer wd.Quit()
 
 	fmt.Println("-----Driver started successfully------")
