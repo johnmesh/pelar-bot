@@ -422,8 +422,10 @@ Polling:
 		} else {
 			wd.Refresh()
 		} */
+
+		orderURL := "https://essayshark.com/writer/orders/" + orderNo + ".html"
 		fmt.Printf("[%d]Opening--->%s\n", b.ID, orderNo)
-		wd.Get("https://essayshark.com/writer/orders/" + orderNo + ".html")
+		wd.Get(orderURL)
 		wd.Refresh()
 
 		//amount := fmt.Sprintf("%.2f", minBid)
@@ -469,7 +471,7 @@ Polling:
 				elem = nil
 				return true, nil
 			} */
-			wd.Refresh()
+			wd.Get(orderURL)
 			makeBid(amount, wd, amt, orderNo, b.ID, 0)
 
 			return false, nil
@@ -532,7 +534,7 @@ Polling:
 			d := time.Now().Sub(start).Seconds()
 			duration := int(d)
 			diff := int(countDown) - duration
-			wd.Refresh()
+			wd.Get(orderURL)
 
 			makeBid(amount, wd, amt, orderNo, b.ID, diff)
 			//try bidding here
