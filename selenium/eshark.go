@@ -228,7 +228,7 @@ Polling:
 		count++
 		*/
 		var orders []selenium.WebElement
-		wd.Refresh()
+		//wd.Refresh()
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			orders, err = wd.FindElements(selenium.ByCSSSelector, ".service-10")
 			if len(orders) > 0 {
@@ -425,8 +425,13 @@ Polling:
 
 		orderURL := "https://essayshark.com/writer/orders/" + orderNo + ".html"
 		fmt.Printf("[%d]Opening--->%s\n", b.ID, orderNo)
+
 		wd.Get(orderURL)
-		wd.Refresh()
+		tout := 5 * time.Second
+		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
+			driver.Refresh()
+			return false, nil
+		}, tout, 1*time.Millisecond)
 
 		//amount := fmt.Sprintf("%.2f", minBid)
 
