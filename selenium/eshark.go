@@ -541,10 +541,8 @@ Polling:
 				makeBid(amount, wd, amt, orderNo, b.ID, diff)
 			} */
 
-			if diff < 10 {
-				wd.Refresh()
-				makeBid(amount, wd, amt, orderNo, b.ID, diff)
-			}
+			wd.Refresh()
+			makeBid(amount, wd, amt, orderNo, b.ID, diff)
 
 			//try bidding here
 			///wd.Refresh()
