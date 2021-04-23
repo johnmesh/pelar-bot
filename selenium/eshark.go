@@ -536,15 +536,15 @@ Polling:
 			duration := int(d)
 			diff := int(countDown) - duration
 
-			elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
+			/* 	elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
 			if elem == nil || err != nil {
 				makeBid(amount, wd, amt, orderNo, b.ID, diff)
-			}
+			} */
 
-			/* if diff < 10 {
+			if diff < 10 {
 				wd.Refresh()
 				makeBid(amount, wd, amt, orderNo, b.ID, diff)
-			} */
+			}
 
 			//try bidding here
 			///wd.Refresh()
