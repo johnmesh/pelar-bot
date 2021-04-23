@@ -428,14 +428,6 @@ Polling:
 		wd.Get(orderURL)
 		wd.Refresh()
 
-		tout := 10 * time.Second
-
-		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
-			fmt.Println("Refreshing....")
-			wd.Refresh()
-			return false, nil
-		}, tout, 1*time.Millisecond)
-
 		//amount := fmt.Sprintf("%.2f", minBid)
 
 		var amount string
@@ -479,6 +471,7 @@ Polling:
 				elem = nil
 				return true, nil
 			} */
+
 			wd.Get(orderURL)
 			makeBid(amount, wd, amt, orderNo, b.ID, 0)
 
@@ -538,13 +531,14 @@ Polling:
 				timer, err = elem.Text()
 				return timer != "", nil
 			} */
-
+			wd.Refresh()
 			d := time.Now().Sub(start).Seconds()
 			duration := int(d)
 			diff := int(countDown) - duration
-			wd.Get(orderURL)
+			if diff < 10 {
+				makeBid(amount, wd, amt, orderNo, b.ID, diff)
+			}
 
-			makeBid(amount, wd, amt, orderNo, b.ID, diff)
 			//try bidding here
 			///wd.Refresh()
 
