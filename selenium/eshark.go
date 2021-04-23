@@ -215,6 +215,7 @@ func (b *Bidder) Start(ctx *Context) {
 
 	//start looking for work
 	//var count int
+	wd.ResizeWindow("", 250, 250)
 
 Polling:
 	for {
@@ -255,8 +256,7 @@ Polling:
 			//fmt.Println("orderNo", i)
 
 			if err != nil {
-				panic(err)
-				//continue FindOrders
+				continue FindOrders
 			}
 
 			if _, ok := ctx.Assigned[dataID]; ok {
