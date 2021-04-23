@@ -228,7 +228,7 @@ Polling:
 		count++
 		*/
 		var orders []selenium.WebElement
-		//wd.Refresh()
+		wd.Refresh()
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			orders, err = wd.FindElements(selenium.ByCSSSelector, ".service-10")
 			if len(orders) > 0 {
@@ -536,11 +536,12 @@ Polling:
 				timer, err = elem.Text()
 				return timer != "", nil
 			} */
-			wd.Refresh()
+
 			d := time.Now().Sub(start).Seconds()
 			duration := int(d)
 			diff := int(countDown) - duration
 			if diff < 10 {
+				wd.Refresh()
 				makeBid(amount, wd, amt, orderNo, b.ID, diff)
 			}
 
