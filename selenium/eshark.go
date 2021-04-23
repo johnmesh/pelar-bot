@@ -532,19 +532,19 @@ Polling:
 		input.SendKeys(amount)
 
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
-			/* elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
-			if elem != nil {
-				timer, err = elem.Text()
-				return timer != "", nil
-			} */
-
 			d := time.Now().Sub(start).Seconds()
 			duration := int(d)
 			diff := int(countDown) - duration
-			if diff < 10 {
-				wd.Refresh()
+
+			elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
+			if elem == nil || err != nil {
 				makeBid(amount, wd, amt, orderNo, b.ID, diff)
 			}
+
+			/* if diff < 10 {
+				wd.Refresh()
+				makeBid(amount, wd, amt, orderNo, b.ID, diff)
+			} */
 
 			//try bidding here
 			///wd.Refresh()
