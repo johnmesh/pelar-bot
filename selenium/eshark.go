@@ -638,7 +638,7 @@ Polling:
 
 func makeBid(amount string, wd selenium.WebDriver, amt string, orderNo string, id int, countDown int) error {
 	fmt.Println("make bid---->", amount, "amt:", amt, "#Order:", orderNo, "ID:", id, "Count Down:", countDown)
-	elem, _ := wd.FindElement(selenium.ByID, "rec_bid")
+	elem, _ := wd.FindElement(selenium.ByID, "id_bid")
 	if elem != nil {
 		//elem.Clear()
 		elem.Click()
