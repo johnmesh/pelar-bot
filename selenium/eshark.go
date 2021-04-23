@@ -1,6 +1,7 @@
 package selenium
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -542,7 +543,9 @@ Polling:
 			} */
 
 			wd.Get(orderURL)
-			makeBid(amount, wd, amt, orderNo, b.ID, diff)
+			if err := makeBid(amount, wd, amt, orderNo, b.ID, diff); err != nil {
+				return true, nil
+			}
 
 			//try bidding here
 			///wd.Refresh()
@@ -641,6 +644,8 @@ func makeBid(amount string, wd selenium.WebDriver, amt string, orderNo string, i
 		elem.Click()
 		wd.KeyDown(selenium.EnterKey)
 
+	} else {
+		return errors.New("no element")
 	}
 
 	/* elem, err = wd.FindElement(selenium.ByID, "apply_order")
