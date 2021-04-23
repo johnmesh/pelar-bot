@@ -255,14 +255,15 @@ Polling:
 			//fmt.Println("orderNo", i)
 
 			if err != nil {
-				continue FindOrders
+				panic(err)
+				//continue FindOrders
 			}
 
-			if _, ok := ctx.Assigned[dataID]; ok {
+			/* 	if _, ok := ctx.Assigned[dataID]; ok {
 				//The order is already taken
 				//fmt.Println("The order is already taken", dataID)
 				continue FindOrders
-			}
+			} */
 			//Add the order to the list
 			ctx.Assigned[dataID] = "processing"
 			orderNo = dataID
