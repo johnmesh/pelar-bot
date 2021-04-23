@@ -19,7 +19,8 @@ func (b *Bidder) Start(ctx *es.Context) {
 	const defaultTimeOut float64 = 5
 
 	fmt.Println("Starting....")
-	pw, err := playwright.Run()
+	dir := fmt.Sprintf("/driver%d/", b.ID)
+	pw, err := playwright.Run(&playwright.RunOptions{DriverDirectory: dir})
 	if err != nil {
 		log.Fatalf("could not start playwright: %v", err)
 	}
