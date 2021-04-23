@@ -237,7 +237,7 @@ Polling:
 			}
 			//wd.Refresh()
 			return false, nil
-		}, 2*time.Second, 1*time.Millisecond)
+		}, 60*time.Second, 1*time.Millisecond)
 
 		if len(orders) < 1 {
 			continue Polling
