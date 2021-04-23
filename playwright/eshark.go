@@ -19,8 +19,8 @@ func (b *Bidder) Start(ctx *es.Context) {
 	const defaultTimeOut float64 = 5
 
 	fmt.Println("Starting....")
-	dir := fmt.Sprintf("/driver%d/", b.ID)
-	pw, err := playwright.Run(&playwright.RunOptions{DriverDirectory: dir})
+	//dir := fmt.Sprintf("/driver%d/", b.ID)
+	pw, err := playwright.Run( /* &playwright.RunOptions{DriverDirectory: dir} */ )
 	if err != nil {
 		log.Fatalf("could not start playwright: %v", err)
 	}
@@ -79,6 +79,7 @@ func (b *Bidder) Start(ctx *es.Context) {
 	for {
 		var orders []playwright.ElementHandle
 		start := time.Now()
+
 	Polling:
 		for {
 

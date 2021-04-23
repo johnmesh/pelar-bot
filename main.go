@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	pr "pelar-bot/playwright"
 	es "pelar-bot/selenium"
 	"strconv"
 	"strings"
@@ -11,13 +10,13 @@ import (
 	"github.com/tebeka/selenium"
 )
 
-func main() {
+/* func main() {
 
 	assigned := make(map[string]string)
 	ctx := es.Context{Assigned: assigned}
 	var wg sync.WaitGroup
 
-	for i := 0; i <= 2; i++ {
+	for i := 0; i < 1; i++ {
 		bid := &pr.Bidder{
 			ID: i,
 		}
@@ -28,8 +27,8 @@ func main() {
 
 	wg.Wait()
 
-}
-func notmain() {
+} */
+func main() {
 	const (
 		// These paths will be different on your system.
 		seleniumPath     = "./vendor/selenium-server-standalone-4.0.0-alpha-1.jar"

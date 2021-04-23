@@ -230,7 +230,7 @@ Polling:
 		var orders []selenium.WebElement
 		wd.Refresh()
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
-			orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
+			orders, err = wd.FindElements(selenium.ByCSSSelector, ".service-10")
 			if len(orders) > 0 {
 				fmt.Printf("[%d]:Orders---> %d\n", b.ID, len(orders))
 				return true, nil
@@ -427,6 +427,14 @@ Polling:
 		fmt.Printf("[%d]Opening--->%s\n", b.ID, orderNo)
 		wd.Get(orderURL)
 		wd.Refresh()
+
+		tout := 10 * time.Second
+
+		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
+			fmt.Println("Refreshing....")
+			wd.Refresh()
+			return false, nil
+		}, tout, 1*time.Millisecond)
 
 		//amount := fmt.Sprintf("%.2f", minBid)
 
