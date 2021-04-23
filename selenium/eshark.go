@@ -641,7 +641,7 @@ func makeBid(amount string, wd selenium.WebDriver, amt string, orderNo string, i
 	elem, _ := wd.FindElement(selenium.ByID, "id_bid")
 	if elem != nil {
 		//elem.Clear()
-		elem.Click()
+		elem.SendKeys(amount)
 		wd.KeyDown(selenium.EnterKey)
 
 	} else {
