@@ -295,29 +295,29 @@ Polling:
 
 		//var order selenium.WebElement
 		var orderNo string
-		//FindOrders:
-		//	for i := range orders {
-		//		//order = nil
-		//		dataID, _ := orders[i]["id"]
-		//		//fmt.Println("orderNo", i)
-		//
-		//		/* if err != nil {
-		//			continue FindOrders
-		//		} */
-		//
-		//		if _, ok := ctx.Assigned[dataID]; ok {
-		//			//The order is already taken
-		//			//fmt.Println("The order is already taken", dataID)
-		//			continue FindOrders
-		//		}
-		//		//Add the order to the list
-		//		ctx.Assigned[dataID] = "processing"
-		//		orderNo = dataID
-		//		break FindOrders
-		//
-		//	}
+	FindOrders:
+		for i := range orders {
+			//order = nil
+			dataID, _ := orders[i]["id"]
+			//fmt.Println("orderNo", i)
 
-		orderNo, _ = orders[0]["id"]
+			/* if err != nil {
+				continue FindOrders
+			} */
+
+			if _, ok := ctx.Assigned[dataID]; ok {
+				//The order is already taken
+				//fmt.Println("The order is already taken", dataID)
+				continue FindOrders
+			}
+			//Add the order to the list
+			ctx.Assigned[dataID] = "processing"
+			orderNo = dataID
+			break FindOrders
+
+		}
+
+		//orderNo, _ = orders[0]["id"]
 
 		if orderNo == "" {
 			continue Polling
