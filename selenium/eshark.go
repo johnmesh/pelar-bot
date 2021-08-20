@@ -115,7 +115,7 @@ func (b *Bidder) Start(ctx *Context) {
 		chromeDriverPath = "/vendor/chromedriver89_linux"
 	)
 	selenium.SetDebug(false)
-	const defaultTimeOut = 20 * time.Second
+	const defaultTimeOut = 10 * time.Second
 
 	service, err := selenium.NewChromeDriverService(chromeDriverPath, b.Port)
 	defer service.Stop()
@@ -336,9 +336,9 @@ Polling:
 		pingReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "e5v05t943c8abcdb0fb85b7c8647b610"})
 
 		fmt.Println("Ping URL:", pingURL)
-		for i := 0; i < 20; i++ {
-			client.Do(pingReq)
-		}
+
+		client.Do(pingReq)
+		client.Do(pingReq)
 
 		//order = nil
 		//order, _ = wd.FindElement(selenium.ByXPATH, "//tr[@data-id ='"+orderNo+"']")
@@ -509,6 +509,7 @@ Polling:
 		/*
 		 * This section checks the remommended bidding amount
 		 */
+		elem = nil
 		elem, err = wd.FindElement(selenium.ByID, "id_order_bidding_form")
 		var amt, r string
 		if elem != nil {
@@ -546,6 +547,11 @@ Polling:
 		req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "e5v05t943c8abcdb0fb85b7c8647b610"})
 		client = &http.Client{}
 
+		_, err = client.Do(req)
+		if err != nil {
+			fmt.Println("bid-error===>", err)
+		}
+
 		var timer string
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
@@ -559,10 +565,10 @@ Polling:
 				return true, nil
 			} */
 
-			_, err = client.Do(req)
+			/* 	_, err = client.Do(req)
 			if err != nil {
 				fmt.Println("bid-error===>", err)
-			}
+			} */
 
 			//wd.Get(orderURL)
 			//makeBid(amount, wd, amt, orderNo, b.ID, 0)
@@ -631,7 +637,7 @@ Polling:
 
 			if ping.TimeRemain == 0 {
 				_, err = client.Do(req)
-				//return true, nil
+				return true, nil
 			}
 
 			if err != nil {
