@@ -253,7 +253,7 @@ Polling:
 		*/
 		client := &http.Client{}
 		var available AvailableItems
-		ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=0&_=1629218589134"
+		ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=1&_=1629218589134"
 		req, err := http.NewRequest("GET", ordersURL, bytes.NewBuffer([]byte("")))
 
 		req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "e5v05t943c8abcdb0fb85b7c8647b610"})
