@@ -280,7 +280,7 @@ Polling:
 
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			od, err = driver.FindElements(selenium.ByCSSSelector, ".service-10")
-			if len(orders) > 0 {
+			if len(od) > 0 {
 				fmt.Printf("[%d]:Orders---> %d\n", b.ID, len(orders))
 				return true, nil
 			}
