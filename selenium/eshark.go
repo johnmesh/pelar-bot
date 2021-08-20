@@ -534,6 +534,8 @@ Polling:
 			wd.Refresh()
 		}
 
+		fmt.Println("Amount", amount)
+
 		form := url.Values{}
 		form.Add("bid_add_ua", "mkkm")
 		form.Add("bid_add", "1")
