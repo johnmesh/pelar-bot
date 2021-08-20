@@ -532,6 +532,7 @@ Polling:
 			}
 
 		} else {
+			fmt.Println("error:::no  amount found")
 			wd.Refresh()
 		}
 
