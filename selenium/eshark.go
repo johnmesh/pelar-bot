@@ -276,18 +276,21 @@ Polling:
 
 		fmt.Println("Available Orders:", len(orders))
 		//wd.Refresh()
-		/* wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
-			orders, err = wd.FindElements(selenium.ByCSSSelector, ".service-10")
+		var od []selenium.WebElement
+
+		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
+			od, err = driver.FindElements(selenium.ByCSSSelector, ".service-10")
 			if len(orders) > 0 {
 				fmt.Printf("[%d]:Orders---> %d\n", b.ID, len(orders))
 				return true, nil
 			}
 			//wd.Refresh()
 			return false, nil
-		}, 60*time.Second, 1*time.Millisecond) */
+		}, 60*time.Second, 1*time.Millisecond)
 
-		if len(orders) < 1 {
-			continue Polling
+		if len(od) < 1 {
+			//continue Polling
+			panic(err)
 
 		}
 
