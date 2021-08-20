@@ -31,8 +31,8 @@ import (
 func main() {
 	const (
 		// These paths will be different on your system.
-		seleniumPath     = "./vendor/selenium-server-standalone-4.0.0-alpha-1.jar"
-		chromeDriverPath = "./vendor/chromedriver89_linux"
+		seleniumPath     = "/vendor/selenium-server-standalone-4.0.0-alpha-1.jar"
+		chromeDriverPath = "/vendor/chromedriver89_linux"
 	/* 	port             = 4015 */
 	)
 

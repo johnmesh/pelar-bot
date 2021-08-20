@@ -112,7 +112,7 @@ func (b *Bidder) Start(ctx *Context) {
 	// running).
 	const PATH = "/Users/mesh"
 	const (
-		chromeDriverPath = "./vendor/chromedriver89_linux"
+		chromeDriverPath = "/vendor/chromedriver89_linux"
 	)
 	selenium.SetDebug(false)
 	const defaultTimeOut = 20 * time.Second
