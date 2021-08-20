@@ -47,7 +47,7 @@ func main() {
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(),             // Start an X frame buffer for the browser to run in.
 		selenium.ChromeDriver(chromeDriverPath), // Specify the path to GeckoDriver in order to use Firefox.
-		/* 	selenium.Output(os.Stderr),   */ // Output debug information to STDERR.
+		//selenium.Output(os.Stderr),              // Output debug information to STDERR.
 	}
 
 	selenium.SetDebug(false)
@@ -59,7 +59,7 @@ func main() {
 	acc := es.Account{Email: "nambengeleashap@gmail.com", Password: "Optimus#On", Bids: es.Amount, ExDisciplines: exDisciplines}
 
 	for i := 1; i <= 3; i++ {
-		p := fmt.Sprintf("401%d", i)
+		p := fmt.Sprintf("403%d", i)
 		port, _ := strconv.Atoi(p)
 		service, err := selenium.NewSeleniumService(seleniumPath, port, opts...)
 		defer service.Stop()

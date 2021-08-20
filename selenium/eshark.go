@@ -1,9 +1,13 @@
 package selenium
 
 import (
-	"errors"
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
+	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -90,6 +94,14 @@ type Account struct {
 	ExDisciplines map[string]string
 }
 
+type AvailableItems struct {
+	Orders []map[string]string `json:"new_items"`
+}
+
+type Ping struct {
+	TimeRemain int `json:"read_time_remain"`
+}
+
 func (b *Bidder) Start(ctx *Context) {
 	defer b.WG.Done()
 	defer func() {
@@ -112,7 +124,7 @@ func (b *Bidder) Start(ctx *Context) {
 	}
 
 	// Connect to the WebDriver instance running locally.
-	caps := selenium.Capabilities{"browserName": "chrome", "pageLoadStrategy": "eager"}
+	caps := selenium.Capabilities{"browserName": "chrome"}
 
 	chromeCaps := chrome.Capabilities{
 		Args: []string{
@@ -135,7 +147,7 @@ func (b *Bidder) Start(ctx *Context) {
 	if err != nil {
 		panic(err)
 	}
-	wd.ResizeWindow("", 1920, 1080)
+	wd.ResizeWindow("", 1400, 750)
 	defer wd.Quit()
 
 	fmt.Println("-----Driver started successfully------")
@@ -145,22 +157,30 @@ func (b *Bidder) Start(ctx *Context) {
 		panic(err)
 	}
 
-	elem, err := wd.FindElement(selenium.ByID, "es-cookie-button-submit")
+	elem, err := wd.FindElement(selenium.ByCSSSelector, ".js--cookie-policy")
 	if err != nil {
-		//panic(err)
+		panic(err)
 	}
 	if elem != nil {
 		elem.Click()
 	}
 
+	wd.Get("https://essayshark.com/writer/orders/")
+
+	/* elem = nil
 	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
-		elem, _ := driver.FindElement(selenium.ByID, LOGIN_ACCOUNT_LINK_ID)
+		elem, _ = driver.FindElement(selenium.ByCSSSelector, ".auth__block")
+
 		if err := elem.Click(); err == nil {
 			return true, nil
 		}
+
 		return false, nil
 	}, defaultTimeOut)
 
+	if elem == nil {
+		panic(err)
+	} */
 	elem, err = wd.FindElement(selenium.ByXPATH, "//input[@id='id_esauth_login_field']")
 	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
 		err = elem.SendKeys(b.Account.Email)
@@ -181,42 +201,44 @@ func (b *Bidder) Start(ctx *Context) {
 	wd.Get("https://essayshark.com/writer/orders/")
 
 	//Discard all orders
-	for {
-		var orders []selenium.WebElement
-		wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
-			orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
-			if len(orders) > 0 {
-				return true, nil
-			}
-
-			return false, nil
-		}, 5*time.Second)
-
-		if len(orders) < 1 {
-			wd.Refresh()
-			break
-		}
-		//Find the discard button
-		elem, err = wd.FindElement(selenium.ByID, "discard_all_visible")
-		wd.ExecuteScript("scroll(2000, 10)", nil)
-		if elem != nil {
-			err = elem.Click()
-		}
-
-		//Click the modal popup
-		elem, err = wd.FindElement(selenium.ByCSSSelector, ".ZebraDialog_Buttons")
-		if elem != nil {
-			elem, err = elem.FindElement(selenium.ByCSSSelector, ".ZebraDialog_Button_1")
-			if elem != nil {
-				err = elem.Click()
-			}
-		}
-
-	}
-
+	//for {
+	//	var orders []selenium.WebElement
+	//	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+	//		orders, err = wd.FindElements(selenium.ByXPATH, "//*[contains(@id,'id_order_container')]")
+	//		if len(orders) > 0 {
+	//			return true, nil
+	//		}
+	//
+	//		return false, nil
+	//	}, 5*time.Second)
+	//
+	//	if len(orders) < 1 {
+	//		wd.Refresh()
+	//		break
+	//	}
+	//	//Find the discard button
+	//	elem, err = wd.FindElement(selenium.ByID, "discard_all_visible")
+	//	wd.ExecuteScript("scroll(2000, 10)", nil)
+	//	if elem != nil {
+	//		err = elem.Click()
+	//	}
+	//
+	//	//Click the modal popup
+	//	elem, err = wd.FindElement(selenium.ByCSSSelector, ".ZebraDialog_Buttons")
+	//	if elem != nil {
+	//		elem, err = elem.FindElement(selenium.ByCSSSelector, ".ZebraDialog_Button_1")
+	//		if elem != nil {
+	//			err = elem.Click()
+	//		}
+	//	}
+	//
+	//}
+	//
 	//start looking for work
 	//var count int
-	wd.ResizeWindow("", 250, 250)
+	//wd.ResizeWindow("", 600, 750)
+
+	//var resp *http.Response
 
 Polling:
 	for {
@@ -229,9 +251,32 @@ Polling:
 		}
 		count++
 		*/
-		var orders []selenium.WebElement
-		wd.Refresh()
-		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
+		client := &http.Client{}
+		var available AvailableItems
+		ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=0&_=1629218589134"
+		req, err := http.NewRequest("GET", ordersURL, bytes.NewBuffer([]byte("")))
+
+		req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "e5v05t943c8abcdb0fb85b7c8647b610"})
+
+		res, err := client.Do(req)
+		if err != nil {
+			fmt.Println("Error fetching", err)
+		}
+
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			fmt.Println("Error reading", err)
+		}
+		err = json.Unmarshal(body, &available)
+		res.Body.Close()
+
+		var orders []map[string]string
+
+		orders = available.Orders
+
+		fmt.Println("Available Orders:", len(orders))
+		//wd.Refresh()
+		/* wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			orders, err = wd.FindElements(selenium.ByCSSSelector, ".service-10")
 			if len(orders) > 0 {
 				fmt.Printf("[%d]:Orders---> %d\n", b.ID, len(orders))
@@ -239,7 +284,7 @@ Polling:
 			}
 			//wd.Refresh()
 			return false, nil
-		}, 60*time.Second, 1*time.Millisecond)
+		}, 60*time.Second, 1*time.Millisecond) */
 
 		if len(orders) < 1 {
 			continue Polling
@@ -250,31 +295,51 @@ Polling:
 
 		//var order selenium.WebElement
 		var orderNo string
-	FindOrders:
-		for i := range orders {
-			//order = nil
-			dataID, err := orders[i].GetAttribute("data-id")
-			//fmt.Println("orderNo", i)
+		//FindOrders:
+		//	for i := range orders {
+		//		//order = nil
+		//		dataID, _ := orders[i]["id"]
+		//		//fmt.Println("orderNo", i)
+		//
+		//		/* if err != nil {
+		//			continue FindOrders
+		//		} */
+		//
+		//		if _, ok := ctx.Assigned[dataID]; ok {
+		//			//The order is already taken
+		//			//fmt.Println("The order is already taken", dataID)
+		//			continue FindOrders
+		//		}
+		//		//Add the order to the list
+		//		ctx.Assigned[dataID] = "processing"
+		//		orderNo = dataID
+		//		break FindOrders
+		//
+		//	}
 
-			if err != nil {
-				continue FindOrders
-			}
-
-			if _, ok := ctx.Assigned[dataID]; ok {
-				//The order is already taken
-				//fmt.Println("The order is already taken", dataID)
-				continue FindOrders
-			}
-			//Add the order to the list
-			ctx.Assigned[dataID] = "processing"
-			orderNo = dataID
-			break FindOrders
-
-		}
+		orderNo, _ = orders[0]["id"]
 
 		if orderNo == "" {
 			continue Polling
 		}
+
+		t := time.Now().Add(time.Second * 20)
+
+		tm := t.UnixNano() / int64(time.Millisecond)
+
+		//Ping the order
+		var ping Ping
+		orderId, _ := strconv.ParseInt(orderNo, 10, 64)
+		pingURL := fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%d&_=%d", orderId, tm)
+		// ping data
+		pingReq, _ := http.NewRequest("GET", pingURL, bytes.NewBuffer([]byte("")))
+		pingReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "e5v05t943c8abcdb0fb85b7c8647b610"})
+
+		fmt.Println("Ping URL:", pingURL)
+		for i := 0; i < 20; i++ {
+			client.Do(pingReq)
+		}
+
 		//order = nil
 		//order, _ = wd.FindElement(selenium.ByXPATH, "//tr[@data-id ='"+orderNo+"']")
 		/* od, _ := order.Text()
@@ -428,12 +493,15 @@ Polling:
 		orderURL := "https://essayshark.com/writer/orders/" + orderNo + ".html"
 		fmt.Printf("[%d]Opening--->%s\n", b.ID, orderNo)
 
+		//bidURL := fmt.Sprintf("https://essayshark.com/writer/orders/%s.html", orderNo)
+
 		wd.Get(orderURL)
-		tout := 5 * time.Second
-		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
-			driver.Refresh()
-			return false, nil
-		}, tout, 1*time.Millisecond)
+		//tout := 5 * time.Second
+		//wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
+		//	driver.Refresh()
+		//	return false, nil
+		//}, tout, 1*time.Millisecond)
+		//wd.Refresh()
 
 		//amount := fmt.Sprintf("%.2f", minBid)
 
@@ -466,6 +534,16 @@ Polling:
 			wd.Refresh()
 		}
 
+		form := url.Values{}
+		form.Add("bid_add_ua", "mkkm")
+		form.Add("bid_add", "1")
+		form.Add("bid", amount)
+
+		req, _ = http.NewRequest("POST", orderURL, strings.NewReader(form.Encode()))
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "e5v05t943c8abcdb0fb85b7c8647b610"})
+		client = &http.Client{}
+
 		var timer string
 		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 			elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
@@ -479,8 +557,13 @@ Polling:
 				return true, nil
 			} */
 
-			wd.Get(orderURL)
-			makeBid(amount, wd, amt, orderNo, b.ID, 0)
+			_, err = client.Do(req)
+			if err != nil {
+				fmt.Println("bid-error===>", err)
+			}
+
+			//wd.Get(orderURL)
+			//makeBid(amount, wd, amt, orderNo, b.ID, 0)
 
 			return false, nil
 		}, defaultTimeOut, 1*time.Millisecond)
@@ -498,18 +581,18 @@ Polling:
 		/*
 		 * This section checks the order discipline
 		 */
-		elem, err = wd.FindElement(selenium.ByCSSSelector, ".fast_order_details")
-		if elem != nil {
-			elem, err = elem.FindElement(selenium.ByCSSSelector, ".d50")
-		}
-		if elem != nil {
-			elems, _ := elem.FindElements(selenium.ByCSSSelector, "dl")
-			elem, err = elems[3].FindElement(selenium.ByCSSSelector, "dd")
-			if elem != nil {
-				discipline, _ := elem.Text()
-				fmt.Println("Order-Discipline----->", formatText(discipline))
-			}
-		}
+		//elem, err = wd.FindElement(selenium.ByCSSSelector, ".fast_order_details")
+		//if elem != nil {
+		//	elem, err = elem.FindElement(selenium.ByCSSSelector, ".d50")
+		//}
+		//if elem != nil {
+		//	elems, _ := elem.FindElements(selenium.ByCSSSelector, "dl")
+		//	elem, err = elems[3].FindElement(selenium.ByCSSSelector, "dd")
+		//	if elem != nil {
+		//		discipline, _ := elem.Text()
+		//		fmt.Println("Order-Discipline----->", formatText(discipline))
+		//	}
+		//}
 
 		//download atleast one file
 		filepath :=
@@ -536,16 +619,45 @@ Polling:
 			d := time.Now().Sub(start).Seconds()
 			duration := int(d)
 			diff := int(countDown) - duration
+			fmt.Println(diff)
+
+			res, _ := client.Do(pingReq)
+			body, err := ioutil.ReadAll(res.Body)
+			err = json.Unmarshal(body, &ping)
+
+			fmt.Println("TImeRemaining:", ping.TimeRemain)
+
+			if ping.TimeRemain == 0 {
+				_, err = client.Do(req)
+				return true, nil
+			}
+
+			if err != nil {
+				fmt.Println("bid-error===>", err)
+			}
 
 			/* 	elem, err = driver.FindElement(selenium.ByXPATH, "//span[@id='id_read_timeout_sec']")
 			if elem == nil || err != nil {
 				makeBid(amount, wd, amt, orderNo, b.ID, diff)
 			} */
 
-			wd.Get(orderURL)
-			if err := makeBid(amount, wd, amt, orderNo, b.ID, diff); err != nil {
+			//resp, _ := http.Get(pingURL)
+
+			//if err != nil {
+			//	log.Fatal("an error occured")
+			//}
+			//
+			////Decode the data
+			//if err := json.NewDecoder(resp.Body).Decode(&pingResp); err != nil {
+			//	log.Fatal("ooopsss! an error occurred.")
+			//}
+			//
+			//fmt.Printf("Time Remaining: %d", pingResp.TimeRemain)
+
+			//wd.Refresh()
+			/* if err := makeBid(amount, wd, amt, orderNo, b.ID, diff); err != nil {
 				return true, nil
-			}
+			} */
 
 			//try bidding here
 			///wd.Refresh()
@@ -636,32 +748,32 @@ Polling:
 
 }
 
-func makeBid(amount string, wd selenium.WebDriver, amt string, orderNo string, id int, countDown int) error {
-	fmt.Println("make bid---->", amount, "amt:", amt, "#Order:", orderNo, "ID:", id, "Count Down:", countDown)
-	elem, _ := wd.FindElement(selenium.ByID, "id_bid")
-	if elem != nil {
-		//elem.Clear()
-		elem.SendKeys(amount)
-		wd.KeyDown(selenium.EnterKey)
-
-	} else {
-		return errors.New("no element")
-	}
-
-	/* elem, err = wd.FindElement(selenium.ByID, "apply_order")
-	if elem == nil {
-		//return errors.New("elem not found")
-	} else {
-		//elem.Click()
-	}
-	/* if err = elem.Click(); err != nil {
-		return err
-	} */
-	/* if err != nil {
-		return err
-	} */
-	return nil
-}
+//func makeBid(amount string, wd selenium.WebDriver, amt string, orderNo string, id int, countDown int) error {
+//	fmt.Println("make bid---->", amount, "amt:", amt, "#Order:", orderNo, "ID:", id, "Count Down:", countDown)
+//	elem, _ := wd.FindElement(selenium.ByID, "id_bid")
+//	if elem != nil {
+//		//elem.Clear()
+//		elem.SendKeys(amount)
+//		wd.KeyDown(selenium.EnterKey)
+//
+//	} else {
+//		return errors.New("no element")
+//	}
+//
+//	/* elem, err = wd.FindElement(selenium.ByID, "apply_order")
+//	if elem == nil {
+//		//return errors.New("elem not found")
+//	} else {
+//		//elem.Click()
+//	}
+//	/* if err = elem.Click(); err != nil {
+//		return err
+//	} */
+//	/* if err != nil {
+//		return err
+//	} */
+//	return nil
+//}
 
 //CleanOrders delete the complete orders every 1min
 func (b *Bidder) CleanOrders(ctx *Context) {
