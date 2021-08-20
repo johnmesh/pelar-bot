@@ -58,7 +58,7 @@ func main() {
 	//Essayshark account information
 	acc := es.Account{Email: "nambengeleashap@gmail.com", Password: "Optimus#On", Bids: es.Amount, ExDisciplines: exDisciplines}
 
-	for i := 1; i <= 3; i++ {
+	for i := 1; i <= 1; i++ {
 		p := fmt.Sprintf("403%d", i)
 		port, _ := strconv.Atoi(p)
 		service, err := selenium.NewSeleniumService(seleniumPath, port, opts...)

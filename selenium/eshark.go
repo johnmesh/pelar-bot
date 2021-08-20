@@ -629,7 +629,7 @@ Polling:
 
 			if ping.TimeRemain == 0 {
 				_, err = client.Do(req)
-				return true, nil
+				//return true, nil
 			}
 
 			if err != nil {
