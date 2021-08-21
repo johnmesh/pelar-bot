@@ -153,17 +153,17 @@ func (b *Bidder) Start(ctx *Context) {
 	fmt.Println("-----Driver started successfully------")
 
 	// Navigate to the esshayshark page.
-	if err := wd.Get("https://essayshark.com/"); err != nil {
-		panic(err)
-	}
-
-	elem, err := wd.FindElement(selenium.ByCSSSelector, ".js--cookie-policy")
-	if err != nil {
-		panic(err)
-	}
-	if elem != nil {
-		elem.Click()
-	}
+	//if err := wd.Get("https://essayshark.com/"); err != nil {
+	//	panic(err)
+	//}
+	//
+	//elem, err := wd.FindElement(selenium.ByCSSSelector, ".js--cookie-policy")
+	//if err != nil {
+	//	panic(err)
+	//}
+	//if elem != nil {
+	//	elem.Click()
+	//}
 
 	wd.Get("https://essayshark.com/writer/orders/")
 
@@ -181,7 +181,7 @@ func (b *Bidder) Start(ctx *Context) {
 	if elem == nil {
 		panic(err)
 	} */
-	elem, err = wd.FindElement(selenium.ByXPATH, "//input[@id='id_esauth_login_field']")
+	elem, err := wd.FindElement(selenium.ByXPATH, "//input[@id='id_esauth_login_field']")
 	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
 		err = elem.SendKeys(b.Account.Email)
 		if err == nil {
