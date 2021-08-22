@@ -165,7 +165,9 @@ func (b *Bidder) Start(ctx *Context) {
 	//	elem.Click()
 	//}
 
-	wd.Get("https://essayshark.com/writer/orders/")
+	if err = wd.Get("https://essayshark.com/writer/orders/"); err != nil {
+		panic(err)
+	}
 
 	/* elem = nil
 	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
