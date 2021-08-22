@@ -110,18 +110,18 @@ func (b *Bidder) Start(ctx *Context) {
 
 	// Start a Selenium WebDriver server instance (if one is not already
 	// running).
-	const PATH = "/Users/mesh"
-	const (
-		chromeDriverPath = "/vendor/chromedriver89_linux"
-	)
+	//const PATH = "/Users/mesh"
+	//const (
+	//	chromeDriverPath = "/vendor/chromedriver_92linux"
+	//)
 	selenium.SetDebug(false)
 	const defaultTimeOut = 10 * time.Second
 
-	service, err := selenium.NewChromeDriverService(chromeDriverPath, b.Port)
-	defer service.Stop()
-	if err != nil {
-		panic(err) // panic is used only as an example and is not otherwise recommended.
-	}
+	//service, err := selenium.NewChromeDriverService(chromeDriverPath, b.Port)
+	//defer service.Stop()
+	//if err != nil {
+	//	panic(err) // panic is used only as an example and is not otherwise recommended.
+	//}
 
 	// Connect to the WebDriver instance running locally.
 	caps := selenium.Capabilities{"browserName": "chrome"}

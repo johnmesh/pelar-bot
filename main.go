@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	es "pelar-bot/selenium"
 	"strconv"
 	"strings"
@@ -33,7 +32,7 @@ func main() {
 	const (
 		// These paths will be different on your system.
 		seleniumPath     = "/vendor/selenium-server-standalone-4.0.0-alpha-1.jar"
-		chromeDriverPath = "/vendor/chromedriver89_linux"
+		chromeDriverPath = "/vendor/chromedriver_92linux"
 	/* 	port             = 4015 */
 	)
 
@@ -48,7 +47,7 @@ func main() {
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(),             // Start an X frame buffer for the browser to run in.
 		selenium.ChromeDriver(chromeDriverPath), // Specify the path to GeckoDriver in order to use Firefox.
-		selenium.Output(os.Stderr),              // Output debug information to STDERR.
+		//selenium.Output(os.Stderr),              // Output debug information to STDERR.
 	}
 
 	selenium.SetDebug(false)
