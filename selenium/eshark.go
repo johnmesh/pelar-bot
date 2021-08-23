@@ -258,7 +258,7 @@ Polling:
 		ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=1&_=1629218589134"
 		req, err := http.NewRequest("GET", ordersURL, bytes.NewBuffer([]byte("")))
 
-		req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "e5v05t943c8abcdb0fb85b7c8647b610"})
+		req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "2av05t28be84933ffb0badf37f037c2a"})
 
 		res, err := client.Do(req)
 		if err != nil {
@@ -338,7 +338,7 @@ Polling:
 		pingURL := fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%d&_=%d", orderId, tm)
 		// ping data
 		pingReq, _ := http.NewRequest("GET", pingURL, bytes.NewBuffer([]byte("")))
-		pingReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "e5v05t943c8abcdb0fb85b7c8647b610"})
+		pingReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "2av05t28be84933ffb0badf37f037c2a"})
 
 		fmt.Println("Ping URL:", pingURL)
 
@@ -550,7 +550,7 @@ Polling:
 
 		req, _ = http.NewRequest("POST", orderURL, strings.NewReader(form.Encode()))
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "e5v05t943c8abcdb0fb85b7c8647b610"})
+		req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: "2av05t28be84933ffb0badf37f037c2a"})
 		client = &http.Client{}
 
 		_, err = client.Do(req)
