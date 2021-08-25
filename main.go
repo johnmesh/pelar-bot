@@ -41,8 +41,10 @@ func main() {
 	for _, v := range es.ExDiscipines {
 		d := strings.Join(strings.Fields(v), "")
 		d = strings.ToLower(d)
-		exDisciplines[d] = d
+		exDisciplines[d] = v
 	}
+
+	//fmt.Println("Fomarted Disclipines", exDisciplines)
 
 	opts := []selenium.ServiceOption{
 		selenium.StartFrameBuffer(),             // Start an X frame buffer for the browser to run in.
