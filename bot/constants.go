@@ -1,4 +1,4 @@
-package selenium
+package bot
 
 const LOGIN_ACCOUNT_LINK_ID = "id_esauth_myaccount_login_link"
 const LOGIN_EMAIL_ID = "id_esauth_login_field"
