@@ -61,7 +61,7 @@ RUN apt-get install -y google-chrome-stable
 COPY --from=builder /dist/pelar-bot /
 
 # Export necessary port
-EXPOSE 4043
+EXPOSE 4044
 
 # Command to run
 CMD ["/pelar-bot"]
