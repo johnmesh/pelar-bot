@@ -153,8 +153,8 @@ func Init() {
 		panic(err)
 	}
 	//account 1
-	//account.Email = "Lydiarugut@gmail.com"
-	//account.Password = "hustle hard"
+	account.Email = "Lydiarugut@gmail.com"
+	account.Password = "hustle hard"
 	//account.Message = "Hi, I deliver high-quality and plagiarism free work.Expect great communication and strict compliance with instructions and deadlines"
 
 	//account 2
@@ -163,8 +163,8 @@ func Init() {
 	//account.Message = "Hi, I am a versatile professional research and academic writer, specializing in research papers, essays, term papers, theses, and dissertations. NO PLAGIARISM..."
 
 	//account 3
-	account.Email = "nambengeleashap@gmail.com"
-	account.Password = "Optimus#On"
+	//account.Email = "nambengeleashap@gmail.com"
+	//account.Password = "Optimus#On"
 
 	//account 4
 	//account.Email = "onderidismus85@gmail.com"
@@ -319,8 +319,6 @@ func (b *Bidder) Start() {
 			cookie, _ := wd.GetCookie("a11nt3n")
 			auth_token := cookie.Value
 
-			fmt.Printf("[%d]:polling... \n", b.ID)
-
 			client := &http.Client{}
 			var available AvailableItems
 			ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=0&_=1629218589134"
@@ -328,7 +326,10 @@ func (b *Bidder) Start() {
 			req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 
 			req.URL, _ = url.Parse(ordersURL)
+
+			//discard All
 			count := 0
+			fmt.Printf("[%d]:polling... \n", b.ID)
 		Polling:
 			for {
 				res, _ := client.Do(req)
@@ -354,8 +355,7 @@ func (b *Bidder) Start() {
 
 				req.URL, _ = url.Parse(ordersURL)
 
-				orders := available.Orders
-				order := orders[b.ID-1]
+				order := available.Orders[b.ID-1]
 				orderNo := order.ID
 
 				mlock.Lock()
@@ -448,7 +448,7 @@ func (b *Bidder) Start() {
 				}
 
 				orderURL := "https://essayshark.com/writer/orders/" + orderNo + ".html"
-				fmt.Printf("[%d]Opening--->%s\n", b.ID, orderURL)
+				//fmt.Printf("[%d]Opening--->%s\n", b.ID, orderURL)
 
 				wd.Get(orderURL)
 
