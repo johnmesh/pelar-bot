@@ -137,7 +137,7 @@ func getAccount(account *Account, email string) (err error) {
 	return
 }
 
-func Init() {
+func Init(email string) {
 	const (
 		seleniumPath     = "/vendor/selenium-server-standalone-4.0.0-alpha-1.jar"
 		chromeDriverPath = "/vendor/chromedriver_92linux"
@@ -148,18 +148,18 @@ func Init() {
 	var isBotRunnig = false
 	var bidders []*Bidder
 
-	err := getAccount(&account, "johnmesh4@gmail.com")
+	err := getAccount(&account, email)
 	if err != nil {
 		panic(err)
 	}
 	//account 1
-	account.Email = "Lydiarugut@gmail.com"
-	account.Password = "hustle hard"
+	//account.Email = "Lydiarugut@gmail.com"
+	//account.Password = "hustle hard"
 	//account.Message = "Hi, I deliver high-quality and plagiarism free work.Expect great communication and strict compliance with instructions and deadlines"
 
 	//account 2
-	//account.Email = "Jacknyangare@yahoo.com"
-	//account.Password = "shark attack"
+	account.Email = "Jacknyangare@yahoo.com"
+	account.Password = "shark attack"
 	//account.Message = "Hi, I am a versatile professional research and academic writer, specializing in research papers, essays, term papers, theses, and dissertations. NO PLAGIARISM..."
 
 	//account 3
@@ -169,6 +169,8 @@ func Init() {
 	//account 4
 	//account.Email = "onderidismus85@gmail.com"
 	//account.Password = "my__shark"
+
+	fmt.Println("Account:::", account.Status, account.OrderDetails.MinDeadline)
 
 	for {
 		//fetch db info
@@ -258,7 +260,7 @@ func (b *Bidder) Start() {
 	for i := 0; i < 5; i++ {
 		wg.Add(1)
 
-		//launch pollers subroutines
+		//launch poller subroutines
 		go func() {
 			defer wg.Done()
 			wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", b.Port))
@@ -324,10 +326,44 @@ func (b *Bidder) Start() {
 			ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=0&_=1629218589134"
 			req, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte("")))
 			req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
-
 			req.URL, _ = url.Parse(ordersURL)
 
 			//discard All
+			mlock.Lock()
+			for {
+
+				res, err := client.Do(req)
+				if err != nil {
+					panic(err)
+				}
+				json.NewDecoder(res.Body).Decode(&available)
+				if len(available.Orders) == 0 {
+					wd.Refresh()
+					break
+				}
+
+				var od []string
+				for i := 0; i < len(available.Orders); i++ {
+					od = append(od, available.Orders[i].ID)
+				}
+				ids := strings.Join(od, ",")
+
+				form := url.Values{}
+				form.Add("act", "discard_all")
+				form.Add("nobreath", "1")
+				form.Add("ids", ids)
+
+				discardAllReq, _ := http.NewRequest("POST", "https://essayshark.com/writer/orders/aj_source.html", strings.NewReader(form.Encode()))
+				discardAllReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+				discardAllReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
+				_, err = client.Do(discardAllReq)
+				if err != nil {
+					panic(err)
+				}
+
+			}
+			mlock.Unlock()
+
 			count := 0
 			fmt.Printf("[%d]:polling... \n", b.ID)
 		Polling:
@@ -336,8 +372,12 @@ func (b *Bidder) Start() {
 				json.NewDecoder(res.Body).Decode(&available)
 
 				if len(available.Orders) < b.ID {
+					//stop bidding
+					if !b.Run {
+						break
+					}
 					count++
-					if count > 2000 {
+					if count > 200 {
 						wd.Refresh()
 						count = 0
 					}
@@ -368,13 +408,13 @@ func (b *Bidder) Start() {
 				mlock.Unlock()
 
 				var ping Ping
+				/**
+				 *  Filters section
+				 */
 				client := &http.Client{}
 				discardReq, err := http.NewRequest("GET", fmt.Sprintf("https://essayshark.com/writer/orders/aj_source.html?act=discard&nobreath=0&id=%s", orderNo), bytes.NewBuffer([]byte("")))
 				discardReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 
-				/**
-				 *  Filters section
-				 */
 				title := order.Discipline2AR.Title
 				serviceType := order.ServiceType.Slug
 				noOfPages, _ := strconv.ParseInt(order.Pages, 10, 32)
@@ -408,29 +448,77 @@ func (b *Bidder) Start() {
 				maxPages := b.Account.OrderDetails.MaxPages
 				if int(noOfPages) < minPages || int(noOfPages) > maxPages && maxPages > 0 {
 					//discard
+					client.Do(discardReq)
+					//remove the order
+					mlock.Lock()
+					if _, ok := AssignedOrders[orderNo]; ok {
+						delete(AssignedOrders, orderNo)
+					}
+					mlock.Unlock()
+					continue Polling
 				}
 
 				completeOrders, _ := strconv.ParseInt(order.CustomerOrder, 10, 32)
 				if int(completeOrders) < b.Account.CustomerDetails.CompleteOrders {
 					//discard
+					client.Do(discardReq)
+					//remove the order
+					mlock.Lock()
+					if _, ok := AssignedOrders[orderNo]; ok {
+						delete(AssignedOrders, orderNo)
+					}
+					mlock.Unlock()
+					continue Polling
 
 				}
 
 				custRating, _ := strconv.ParseFloat(order.CustomerRating, 64)
 				if b.Account.CustomerDetails.DiscardNoRatings && custRating == 0 {
 					//discard
+					client.Do(discardReq)
+					//remove the order
+					mlock.Lock()
+					if _, ok := AssignedOrders[orderNo]; ok {
+						delete(AssignedOrders, orderNo)
+					}
+					mlock.Unlock()
+					continue Polling
 				}
 
 				if float32(custRating) < b.Account.CustomerDetails.MinRating {
 					//discard
+					client.Do(discardReq)
+					//remove the order
+					mlock.Lock()
+					if _, ok := AssignedOrders[orderNo]; ok {
+						delete(AssignedOrders, orderNo)
+					}
+					mlock.Unlock()
+					continue Polling
 				}
 
 				if b.Account.CustomerDetails.DiscardOfflineCust && order.OnlineStatus == "offline" {
 					//discard
+					client.Do(discardReq)
+					//remove the order
+					mlock.Lock()
+					if _, ok := AssignedOrders[orderNo]; ok {
+						delete(AssignedOrders, orderNo)
+					}
+					mlock.Unlock()
+					continue Polling
 				}
 
 				if b.Account.CustomerDetails.DiscardNewCust && order.NewCustomer == "Y" {
 					//discard
+					client.Do(discardReq)
+					//remove the order
+					mlock.Lock()
+					if _, ok := AssignedOrders[orderNo]; ok {
+						delete(AssignedOrders, orderNo)
+					}
+					mlock.Unlock()
+					continue Polling
 				}
 				//assumes time in seconds
 				deadline, _ := strconv.ParseInt(order.Deadline, 10, 64)
@@ -456,38 +544,26 @@ func (b *Bidder) Start() {
 				 * Bidding Section
 				 */
 
+				//Check for recommended bid amount
 				var amount string
+				elem, err := wd.FindElement(selenium.ByID, "rec_bid")
+				if elem != nil {
+					elem, err = elem.FindElement(selenium.ByID, "rec_amount")
+					if elem != nil {
+						rec, _ := elem.Text()
+						if rec != "" {
+							amount = rec
+							fmt.Println("Rec-amount", rec)
+						}
+					}
 
-				//elem, err := wd.FindElement(selenium.ByID, "rec_bid")
-				//if elem != nil {
-				//	var amt, r string
-				//	elem, err = elem.FindElement(selenium.ByID, "rec_amount")
-				//	if elem != nil {
-				//		rec, _ := elem.Text()
-				//		if rec != "" {
-				//			r, _ := strconv.ParseFloat(rec, 32)
-				//			for i := 0; i < len(b.Account.Bids); i++ {
-				//				if b.Account.Bids[i].Rec == float32(r) {
-				//					//amt = fmt.Sprintf("%.2f", b.Account.Bids[i].Amount)
-				//					break
-				//				}
-				//			}
-				//			fmt.Println("Rec-amount", amt, rec)
-				//		}
-				//	}
-				//	if amt != "" {
-				//		amount = amt
-				//	} else if amount == "" {
-				//		amount = r
-				//	}
-				//
-				//} else {
-				//	fmt.Println("error:::no  amount found", orderNo)
-				//
-				//}
+				}
+				if amount == "" {
+					amount = fmt.Sprintf("%.2f", bidAmount)
+					fmt.Println("error:::no  amount found", orderNo)
+				}
 
-				amount = fmt.Sprintf("%.2f", bidAmount)
-
+				//Check for undownloaded files
 				client = &http.Client{}
 				pingReq, _ := http.NewRequest("GET", fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%s", orderNo), bytes.NewBuffer([]byte("")))
 				pingReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
@@ -496,8 +572,6 @@ func (b *Bidder) Start() {
 
 				if ping.FilesRemain != 0 {
 					//download atleast one file
-					/* filepath :=
-					"//div[@class='paper_instructions_view']/a[contains (@data-url-raw,'/writer/get_additional_material.html')]" */
 					wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 						elem, err = driver.FindElement(selenium.ByXPATH, "//a[contains (@target,'download_ifm')]")
 						if elem != nil {
@@ -517,7 +591,6 @@ func (b *Bidder) Start() {
 					}
 				}
 
-				amount = fmt.Sprintf("%.2f", bidAmount)
 				fmt.Println("Amount", amount)
 
 				var bg sync.WaitGroup

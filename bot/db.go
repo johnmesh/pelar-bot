@@ -10,7 +10,7 @@ import (
 )
 
 func Connect() (*mongo.Client, error) {
-	DB_URL := "mongodb+srv://mengere:89UJA330edsJC7EA@cluster0.3aigp.mongodb.net/Pbot?retryWrites=true&w=majority"
+	DB_URL := "mongodb://pelar:pelar67055595@198.58.123.60:27017/?retryWrites=true&w=majority"
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(DB_URL))
 
 	if err != nil {
