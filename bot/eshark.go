@@ -71,19 +71,6 @@ type BiddingPrice struct {
 	Bids []Bid `bson:"bids"`
 }
 
-type Worker struct {
-	wd      *selenium.WebDriver
-	ID      int
-	Token   string
-	Account Account
-}
-
-type Filters struct {
-	OrderDetails    OrderDetails    `bson:"orderDetails"`
-	CustomerDetails CustomerDetails `bson:"customerDetails"`
-	BiddingPrice
-}
-
 type Account struct {
 	Address         string             `bson:"address"`
 	Email           string             `bson:"email"`
@@ -144,36 +131,39 @@ func Init(email string) {
 	)
 	selenium.SetDebug(false)
 
-	var account Account
 	var isBotRunnig = false
 	var bidders []*Bidder
 
-	err := getAccount(&account, email)
-	if err != nil {
-		panic(err)
-	}
+	//err := getAccount(&account, email)
+	//if err != nil {
+	//	panic(err)
+	//}
 	//account 1
 	//account.Email = "Lydiarugut@gmail.com"
 	//account.Password = "hustle hard"
 	//account.Message = "Hi, I deliver high-quality and plagiarism free work.Expect great communication and strict compliance with instructions and deadlines"
 
 	//account 2
-	account.Email = "Jacknyangare@yahoo.com"
-	account.Password = "shark attack"
+	//account.Email = "Jacknyangare@yahoo.com"
+	//account.Password = "shark attack"
 	//account.Message = "Hi, I am a versatile professional research and academic writer, specializing in research papers, essays, term papers, theses, and dissertations. NO PLAGIARISM..."
 
 	//account 3
 	//account.Email = "nambengeleashap@gmail.com"
-	//account.Password = "Optimus#On"
-
+	//	account.Password = "Optimus#On"
 	//account 4
 	//account.Email = "onderidismus85@gmail.com"
 	//account.Password = "my__shark"
 
-	fmt.Println("Account:::", account.Status, account.OrderDetails.MinDeadline)
-
 	for {
-		//fetch db info
+		//sync data
+		var account Account
+		err := getAccount(&account, email)
+		if err != nil {
+			fmt.Println("Error:::", err)
+		}
+
+		fmt.Println("Account:::", account.Email, account.Password)
 
 		if account.Status == "on" && !isBotRunnig {
 			//start bidding
@@ -195,9 +185,11 @@ func Init(email string) {
 				p := fmt.Sprintf("401%d", i)
 				port, _ := strconv.Atoi(p)
 				service, err := selenium.NewSeleniumService(seleniumPath, port, opts...)
+
 				if err != nil {
 					panic(err) // panic is used only as an example and is not otherwise recommended.
 				}
+				defer service.Stop()
 				bidder := &Bidder{
 					ID:      i,
 					Port:    port,
@@ -214,7 +206,6 @@ func Init(email string) {
 		} else if account.Status == "off" && isBotRunnig {
 			//stop bidding
 			for i := 0; i < len(bidders); i++ {
-				bidders[i].Service.Stop()
 				bidders[i].Run = false
 			}
 			isBotRunnig = false
@@ -224,18 +215,16 @@ func Init(email string) {
 				bidders[i].Account = account
 			}
 		}
-		//Repeat after every 5 seconds
+		//Sync every 5 seconds
 		time.Sleep(5 * time.Second)
+
 	}
 
 }
 
-var webDrivers []selenium.WebDriver
-
 func (b *Bidder) Start() {
 
 	const defaultTimeOut = 10 * time.Second
-	//var lock = &sync.Mutex{}
 
 	// Connect to the WebDriver instance running locally.
 	caps := selenium.Capabilities{"browserName": "chrome"}
@@ -328,7 +317,7 @@ func (b *Bidder) Start() {
 			req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 			req.URL, _ = url.Parse(ordersURL)
 
-			//discard All
+			//Discard all orders
 			mlock.Lock()
 			for {
 
@@ -338,6 +327,7 @@ func (b *Bidder) Start() {
 				}
 				json.NewDecoder(res.Body).Decode(&available)
 				if len(available.Orders) == 0 {
+					mlock.Unlock()
 					wd.Refresh()
 					break
 				}
@@ -362,7 +352,6 @@ func (b *Bidder) Start() {
 				}
 
 			}
-			mlock.Unlock()
 
 			count := 0
 			fmt.Printf("[%d]:polling... \n", b.ID)
@@ -374,6 +363,7 @@ func (b *Bidder) Start() {
 				if len(available.Orders) < b.ID {
 					//stop bidding
 					if !b.Run {
+						b.Service.Stop()
 						break
 					}
 					count++
@@ -533,6 +523,14 @@ func (b *Bidder) Start() {
 				//fmt.Println("Deadline::::", td, orderNo)
 				if td.Before(minTime) || td.After(maxTime) && maxDeadline > 0 {
 					//discard
+					client.Do(discardReq)
+					//remove the order
+					mlock.Lock()
+					if _, ok := AssignedOrders[orderNo]; ok {
+						delete(AssignedOrders, orderNo)
+					}
+					mlock.Unlock()
+					continue Polling
 				}
 
 				orderURL := "https://essayshark.com/writer/orders/" + orderNo + ".html"
