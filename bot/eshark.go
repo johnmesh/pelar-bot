@@ -32,9 +32,11 @@ func formatText(s string) string {
 }
 
 var AssignedOrders = make(map[string]string)
+var allDiscarded = false
+
+//locks
 var mlock = &sync.Mutex{}
 var slock = &sync.Mutex{}
-var allDiscarded = false
 
 type Bidder struct {
 	ID      int
@@ -222,7 +224,7 @@ func (b *Bidder) Start() {
 	caps.AddChrome(chromeCaps)
 
 	var wg sync.WaitGroup
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 10; i++ {
 		wg.Add(1)
 
 		//launch poller subroutines
@@ -565,7 +567,7 @@ func (b *Bidder) Start() {
 								count++
 								if count > 30 {
 									//remove the order
-									time.Sleep(3 * time.Second)
+									time.Sleep(4 * time.Second)
 									mlock.Lock()
 									if _, ok := AssignedOrders[orderNo]; ok {
 										delete(AssignedOrders, orderNo)
