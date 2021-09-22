@@ -2,7 +2,6 @@ package bot
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -34,6 +33,8 @@ func formatText(s string) string {
 
 var AssignedOrders = make(map[string]string)
 var mlock = &sync.Mutex{}
+var slock = &sync.Mutex{}
+var allDiscarded = false
 
 type Bidder struct {
 	ID      int
@@ -117,10 +118,7 @@ type Ping struct {
 }
 
 func getAccount(account *Account, email string) (err error) {
-	client, _ := Connect()
-	defer client.Disconnect(context.Background())
-
-	err = GetAccount(client, email, account)
+	err = FetchAccount(email, account)
 	return
 }
 
@@ -134,27 +132,6 @@ func Init(email string) {
 	var isBotRunnig = false
 	var bidders []*Bidder
 
-	//err := getAccount(&account, email)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//account 1
-	//account.Email = "Lydiarugut@gmail.com"
-	//account.Password = "hustle hard"
-	//account.Message = "Hi, I deliver high-quality and plagiarism free work.Expect great communication and strict compliance with instructions and deadlines"
-
-	//account 2
-	//account.Email = "Jacknyangare@yahoo.com"
-	//account.Password = "shark attack"
-	//account.Message = "Hi, I am a versatile professional research and academic writer, specializing in research papers, essays, term papers, theses, and dissertations. NO PLAGIARISM..."
-
-	//account 3
-	//account.Email = "nambengeleashap@gmail.com"
-	//	account.Password = "Optimus#On"
-	//account 4
-	//account.Email = "onderidismus85@gmail.com"
-	//account.Password = "my__shark"
-
 	for {
 		//sync data
 		var account Account
@@ -163,7 +140,7 @@ func Init(email string) {
 			fmt.Println("Error:::", err)
 		}
 
-		fmt.Println("Account:::", account.Email, account.Password)
+		fmt.Println("Account:::", account.Email, account.Password, account.Status)
 
 		if account.Status == "on" && !isBotRunnig {
 			//start bidding
@@ -182,12 +159,12 @@ func Init(email string) {
 
 			//launch the services
 			for i := 1; i <= 3; i++ {
-				p := fmt.Sprintf("401%d", i)
+				p := fmt.Sprintf("801%d", i)
 				port, _ := strconv.Atoi(p)
 				service, err := selenium.NewSeleniumService(seleniumPath, port, opts...)
 
 				if err != nil {
-					panic(err) // panic is used only as an example and is not otherwise recommended.
+					panic(err)
 				}
 				defer service.Stop()
 				bidder := &Bidder{
@@ -225,7 +202,6 @@ func Init(email string) {
 func (b *Bidder) Start() {
 
 	const defaultTimeOut = 10 * time.Second
-
 	// Connect to the WebDriver instance running locally.
 	caps := selenium.Capabilities{"browserName": "chrome"}
 
@@ -252,11 +228,14 @@ func (b *Bidder) Start() {
 		//launch poller subroutines
 		go func() {
 			defer wg.Done()
+			slock.Lock()
 			wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", b.Port))
 
 			if err != nil {
 				panic(err)
 			}
+			slock.Unlock()
+
 			wd.ResizeWindow("", 1400, 750)
 			defer wd.Quit()
 
@@ -319,39 +298,42 @@ func (b *Bidder) Start() {
 
 			//Discard all orders
 			mlock.Lock()
-			for {
+			if !allDiscarded {
+				for {
 
-				res, err := client.Do(req)
-				if err != nil {
-					panic(err)
+					res, err := client.Do(req)
+					if err != nil {
+						panic(err)
+					}
+					json.NewDecoder(res.Body).Decode(&available)
+					if len(available.Orders) == 0 {
+						wd.Refresh()
+						break
+					}
+
+					var od []string
+					for i := 0; i < len(available.Orders); i++ {
+						od = append(od, available.Orders[i].ID)
+					}
+					ids := strings.Join(od, ",")
+
+					form := url.Values{}
+					form.Add("act", "discard_all")
+					form.Add("nobreath", "1")
+					form.Add("ids", ids)
+
+					discardAllReq, _ := http.NewRequest("POST", "https://essayshark.com/writer/orders/aj_source.html", strings.NewReader(form.Encode()))
+					discardAllReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+					discardAllReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
+					_, err = client.Do(discardAllReq)
+					if err != nil {
+						panic(err)
+					}
+
 				}
-				json.NewDecoder(res.Body).Decode(&available)
-				if len(available.Orders) == 0 {
-					mlock.Unlock()
-					wd.Refresh()
-					break
-				}
-
-				var od []string
-				for i := 0; i < len(available.Orders); i++ {
-					od = append(od, available.Orders[i].ID)
-				}
-				ids := strings.Join(od, ",")
-
-				form := url.Values{}
-				form.Add("act", "discard_all")
-				form.Add("nobreath", "1")
-				form.Add("ids", ids)
-
-				discardAllReq, _ := http.NewRequest("POST", "https://essayshark.com/writer/orders/aj_source.html", strings.NewReader(form.Encode()))
-				discardAllReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-				discardAllReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
-				_, err = client.Do(discardAllReq)
-				if err != nil {
-					panic(err)
-				}
-
+				allDiscarded = true
 			}
+			mlock.Unlock()
 
 			count := 0
 			fmt.Printf("[%d]:polling... \n", b.ID)
@@ -414,23 +396,19 @@ func (b *Bidder) Start() {
 				if _, ok := b.Account.ExDisciplines[formatText(title)]; ok {
 					client.Do(discardReq)
 					//remove the order
-					mlock.Lock()
-					if _, ok := AssignedOrders[orderNo]; ok {
-						delete(AssignedOrders, orderNo)
-					}
-					mlock.Unlock()
 					continue Polling
 
 				}
 
-				if serviceType == "assignment" || serviceType == "editing_rewriting" {
+				if b.Account.OrderDetails.DiscardAssignments && serviceType == "assignment" {
 					client.Do(discardReq)
 					//remove the order
-					mlock.Lock()
-					if _, ok := AssignedOrders[orderNo]; ok {
-						delete(AssignedOrders, orderNo)
-					}
-					mlock.Unlock()
+					continue Polling
+				}
+
+				if b.Account.OrderDetails.DiscardEditting && serviceType == "editing_rewriting" {
+					client.Do(discardReq)
+					//remove the order
 					continue Polling
 				}
 
@@ -440,11 +418,6 @@ func (b *Bidder) Start() {
 					//discard
 					client.Do(discardReq)
 					//remove the order
-					mlock.Lock()
-					if _, ok := AssignedOrders[orderNo]; ok {
-						delete(AssignedOrders, orderNo)
-					}
-					mlock.Unlock()
 					continue Polling
 				}
 
@@ -453,11 +426,6 @@ func (b *Bidder) Start() {
 					//discard
 					client.Do(discardReq)
 					//remove the order
-					mlock.Lock()
-					if _, ok := AssignedOrders[orderNo]; ok {
-						delete(AssignedOrders, orderNo)
-					}
-					mlock.Unlock()
 					continue Polling
 
 				}
@@ -467,11 +435,6 @@ func (b *Bidder) Start() {
 					//discard
 					client.Do(discardReq)
 					//remove the order
-					mlock.Lock()
-					if _, ok := AssignedOrders[orderNo]; ok {
-						delete(AssignedOrders, orderNo)
-					}
-					mlock.Unlock()
 					continue Polling
 				}
 
@@ -479,11 +442,6 @@ func (b *Bidder) Start() {
 					//discard
 					client.Do(discardReq)
 					//remove the order
-					mlock.Lock()
-					if _, ok := AssignedOrders[orderNo]; ok {
-						delete(AssignedOrders, orderNo)
-					}
-					mlock.Unlock()
 					continue Polling
 				}
 
@@ -491,11 +449,6 @@ func (b *Bidder) Start() {
 					//discard
 					client.Do(discardReq)
 					//remove the order
-					mlock.Lock()
-					if _, ok := AssignedOrders[orderNo]; ok {
-						delete(AssignedOrders, orderNo)
-					}
-					mlock.Unlock()
 					continue Polling
 				}
 
@@ -503,11 +456,6 @@ func (b *Bidder) Start() {
 					//discard
 					client.Do(discardReq)
 					//remove the order
-					mlock.Lock()
-					if _, ok := AssignedOrders[orderNo]; ok {
-						delete(AssignedOrders, orderNo)
-					}
-					mlock.Unlock()
 					continue Polling
 				}
 				//assumes time in seconds
@@ -525,11 +473,6 @@ func (b *Bidder) Start() {
 					//discard
 					client.Do(discardReq)
 					//remove the order
-					mlock.Lock()
-					if _, ok := AssignedOrders[orderNo]; ok {
-						delete(AssignedOrders, orderNo)
-					}
-					mlock.Unlock()
 					continue Polling
 				}
 
@@ -551,7 +494,7 @@ func (b *Bidder) Start() {
 						rec, _ := elem.Text()
 						if rec != "" {
 							amount = rec
-							fmt.Println("Rec-amount", rec)
+							fmt.Println("Rec-amount:::", rec)
 						}
 					}
 
@@ -579,9 +522,7 @@ func (b *Bidder) Start() {
 						return false, nil
 					}, 5*time.Second, 1*time.Millisecond)
 
-					if elem == nil {
-						fmt.Printf("[%d]No files to donwnload\n", b.ID)
-					} else {
+					if elem != nil {
 						wd.ExecuteScript("scroll(2000, 200)", nil)
 						if err = elem.Click(); err != nil {
 							//unable to donwload file
@@ -589,10 +530,10 @@ func (b *Bidder) Start() {
 					}
 				}
 
-				fmt.Println("Amount", amount)
+				fmt.Println("Amount:::", amount)
 
 				var bg sync.WaitGroup
-				for i := 0; i < 10; i++ {
+				for i := 0; i < 11; i++ {
 					//launch bidding subroutines
 					bg.Add(1)
 					go func() {
@@ -624,6 +565,7 @@ func (b *Bidder) Start() {
 								count++
 								if count > 30 {
 									//remove the order
+									time.Sleep(3 * time.Second)
 									mlock.Lock()
 									if _, ok := AssignedOrders[orderNo]; ok {
 										delete(AssignedOrders, orderNo)
