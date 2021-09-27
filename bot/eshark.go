@@ -37,8 +37,6 @@ var allDiscarded = false
 //locks
 var mlock = &sync.Mutex{}
 var slock = &sync.Mutex{}
-var dlock = &sync.Mutex{}
-var plock = &sync.Mutex{}
 
 type Bidder struct {
 	ID      int
@@ -111,6 +109,8 @@ type Order struct {
 	ServiceType struct {
 		Slug string `json:"slug"`
 	} `json:"service_type_ar"`
+
+	OutDated string `json:"bid_outdated"`
 }
 type AvailableItems struct {
 	Orders []Order `json:"new_items"`
@@ -163,7 +163,7 @@ func Init(email string) {
 
 			//launch the services
 			for i := 1; i <= 3; i++ {
-				p := fmt.Sprintf("401%d", i)
+				p := fmt.Sprintf("801%d", i)
 				port, _ := strconv.Atoi(p)
 				service, err := selenium.NewSeleniumService(seleniumPath, port, opts...)
 
@@ -213,8 +213,8 @@ func (b *Bidder) Start() {
 		Args: []string{
 			"--no-sandbox",
 			"--headless",
-			"--disable-dev-shm-usage",
 			"--window-size=600,750",
+			"--disable-dev-shm-usage",
 			"--disable-gpu",
 			"--dns-prefetch-disable",
 			"--window-size=1920,1080",
@@ -225,164 +225,145 @@ func (b *Bidder) Start() {
 
 	caps.AddChrome(chromeCaps)
 
-	//launch poller subroutines
-	slock.Lock()
-	wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", b.Port))
+	var wg sync.WaitGroup
+	for i := 0; i < 3; i++ {
+		wg.Add(1)
 
-	if err != nil {
-		panic(err)
-	}
-	slock.Unlock()
+		//launch poller subroutines
+		go func() {
+			defer wg.Done()
+			slock.Lock()
+			wd, err := selenium.NewRemote(caps, fmt.Sprintf("http://localhost:%d/wd/hub", b.Port))
 
-	wd.ResizeWindow("", 1400, 750)
-	defer wd.Quit()
+			if err != nil {
+				panic(err)
+			}
+			slock.Unlock()
 
-	fmt.Println("-----Driver started successfully------")
+			wd.ResizeWindow("", 1400, 750)
+			defer wd.Quit()
 
-	// Navigate to the esshayshark page.
-	if err := wd.Get("https://essayshark.com/"); err != nil {
-		panic(err)
-	}
+			fmt.Println("-----Driver started successfully------")
 
-	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
-		elem, err := wd.FindElement(selenium.ByXPATH, "/html/body/header/div/div/button[2]")
-		if err = elem.Click(); err == nil {
-			return true, nil
-		}
+			// Navigate to the esshayshark page.
+			if err := wd.Get("https://essayshark.com/"); err != nil {
+				panic(err)
+			}
 
-		return false, nil
-	}, defaultTimeOut)
+			wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+				elem, err := wd.FindElement(selenium.ByXPATH, "/html/body/header/div/div/button[2]")
+				if err = elem.Click(); err == nil {
+					return true, nil
+				}
 
-	if err != nil {
-		panic(err)
-	}
+				return false, nil
+			}, defaultTimeOut)
 
-	if err = wd.Get("https://essayshark.com/writer/orders/"); err != nil {
-		panic(err)
-	}
+			if err != nil {
+				panic(err)
+			}
 
-	elem, err := wd.FindElement(selenium.ByXPATH, "//input[@id='id_esauth_login_field']")
-	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
-		err = elem.SendKeys(b.Account.Email)
-		if err == nil {
-			return true, nil
-		}
-		return false, nil
-	}, defaultTimeOut)
+			if err = wd.Get("https://essayshark.com/writer/orders/"); err != nil {
+				panic(err)
+			}
 
-	elem, err = wd.FindElement(selenium.ByXPATH, "//input[@id='id_esauth_pwd_field']")
-	if err != nil {
-		panic(err)
-	}
+			elem, err := wd.FindElement(selenium.ByXPATH, "//input[@id='id_esauth_login_field']")
+			wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+				err = elem.SendKeys(b.Account.Email)
+				if err == nil {
+					return true, nil
+				}
+				return false, nil
+			}, defaultTimeOut)
 
-	elem.SendKeys(b.Account.Password)
-	wd.KeyDown(selenium.EnterKey)
+			elem, err = wd.FindElement(selenium.ByXPATH, "//input[@id='id_esauth_pwd_field']")
+			if err != nil {
+				panic(err)
+			}
 
-	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
-		return false, nil
-	}, defaultTimeOut)
+			elem.SendKeys(b.Account.Password)
+			wd.KeyDown(selenium.EnterKey)
 
-	wd.Get("https://essayshark.com/writer/orders/")
+			wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+				return false, nil
+			}, defaultTimeOut)
 
-	cookie, _ := wd.GetCookie("a11nt3n")
-	auth_token := cookie.Value
+			wd.Get("https://essayshark.com/writer/orders/")
 
-	//Prepare a request
-	client := &http.Client{}
-	var available AvailableItems
-	ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=0&_=1629218589134"
-	req, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte("")))
-	req.Header.Add("User-Agent", "")
-	req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
-	req.URL, _ = url.Parse(ordersURL)
+			cookie, _ := wd.GetCookie("a11nt3n")
+			auth_token := cookie.Value
 
-	//Discard all orders
-	dlock.Lock()
-	for {
-
-		res, err := client.Do(req)
-
-		if err != nil {
-			panic(err)
-		}
-		err = json.NewDecoder(res.Body).Decode(&available)
-		if err != nil {
-			panic(err)
-		}
-		if len(available.Orders) == 0 {
-			wd.Refresh()
-			break
-		}
-
-		var od []string
-		for i := 0; i < len(available.Orders); i++ {
-			od = append(od, available.Orders[i].ID)
-		}
-		ids := strings.Join(od, ",")
-
-		form := url.Values{}
-		form.Add("act", "discard_all")
-		form.Add("nobreath", "1")
-		form.Add("ids", ids)
-
-		discardAllReq, _ := http.NewRequest("POST", "https://essayshark.com/writer/orders/aj_source.html", strings.NewReader(form.Encode()))
-		discardAllReq.Header.Add("User-Agent", "Other")
-		discardAllReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		discardAllReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
-		_, err = client.Do(discardAllReq)
-		if err != nil {
-			panic(err)
-		}
-	}
-	dlock.Unlock()
-
-	count := 0
-	c := make(chan string)
-	c1 := make(chan string)
-
-	for i := 0; i < 5; i++ {
-		go func(c chan string) {
-
-			ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=0&_=1629218589134"
-
-			var available AvailableItems
-			//prepare a  request
 			client := &http.Client{}
-			req, _ = http.NewRequest("GET", "", bytes.NewBuffer([]byte("")))
-			req.Header.Add("User-Agent", "")
+			var available AvailableItems
+			ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=0&_=1629218589134"
+			req, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte("")))
+			req.Header.Add("User-Agent", "Other")
 			req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 			req.URL, _ = url.Parse(ordersURL)
 
+			//Discard all orders
+			mlock.Lock()
+			if !allDiscarded {
+				for {
+
+					res, err := client.Do(req)
+					if err != nil {
+						panic(err)
+					}
+					json.NewDecoder(res.Body).Decode(&available)
+					if len(available.Orders) == 0 {
+						wd.Refresh()
+						break
+					}
+
+					var od []string
+					for i := 0; i < len(available.Orders); i++ {
+						od = append(od, available.Orders[i].ID)
+					}
+					ids := strings.Join(od, ",")
+
+					form := url.Values{}
+					form.Add("act", "discard_all")
+					form.Add("nobreath", "1")
+					form.Add("ids", ids)
+
+					discardAllReq, _ := http.NewRequest("POST", "https://essayshark.com/writer/orders/aj_source.html", strings.NewReader(form.Encode()))
+					discardAllReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+					discardAllReq.Header.Add("User-Agent", "Other")
+					discardAllReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
+					_, err = client.Do(discardAllReq)
+					if err != nil {
+						panic(err)
+					}
+
+				}
+				allDiscarded = true
+			}
+			mlock.Unlock()
+			count := 0
 			fmt.Printf("[%d]:polling... \n", b.ID)
-			var orderNo string
+
+			wd.Get("https://essayshark.com/writer/orders/")
 
 		Polling:
 			for {
-				plock.Lock()
-				res, _ := client.Do(req)
-				//fmt.Printf("[%d]Status::::::%s", b.ID, res.Status)
-				json.NewDecoder(res.Body).Decode(&available)
-				//fmt.Println("Available orders:::", len(available.Orders))
 
+				res, _ := client.Do(req)
+				json.NewDecoder(res.Body).Decode(&available)
 				if len(available.Orders) < b.ID {
-					plock.Unlock()
-					//stop bidding
+					/* 	//stop bidding
 					if !b.Run {
 						b.Service.Stop()
 						break
-					}
+					} */
 					count++
-					/* if count > 200 {
+					if count > 200 {
 						wd.Refresh()
 						count = 0
-					} */
+					}
+
 					continue Polling
 				}
-				//fmt.Println(orderNo, available.Orders[b.ID-1].ID)
-				//if orderNo == available.Orders[b.ID-1].ID {
-				//	continue Polling
-				//}
-				//fmt.Println("Available orders:::", len(available.Orders))
 
 				req.URL, _ = url.Parse(fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%s", available.Orders[b.ID-1].ID))
 
@@ -391,12 +372,10 @@ func (b *Bidder) Start() {
 				client.Do(req)
 				client.Do(req)
 
-				plock.Unlock()
-
 				req.URL, _ = url.Parse(ordersURL)
 
 				order := available.Orders[b.ID-1]
-				orderNo = order.ID
+				orderNo := order.ID
 
 				mlock.Lock()
 				if _, ok := AssignedOrders[orderNo]; ok {
@@ -407,11 +386,12 @@ func (b *Bidder) Start() {
 				AssignedOrders[orderNo] = orderNo
 				mlock.Unlock()
 
-				/**
-				 *  Filters section
-				 */
+				//var ping Ping
+				///**
+				// *  Filters section
+				// */
 				client := &http.Client{}
-				discardReq, _ := http.NewRequest("GET", fmt.Sprintf("https://essayshark.com/writer/orders/aj_source.html?act=discard&nobreath=0&id=%s", orderNo), bytes.NewBuffer([]byte("")))
+				discardReq, err := http.NewRequest("GET", fmt.Sprintf("https://essayshark.com/writer/orders/aj_source.html?act=discard&nobreath=0&id=%s", orderNo), bytes.NewBuffer([]byte("")))
 				discardReq.Header.Add("User-Agent", "Other")
 				discardReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 
@@ -503,97 +483,143 @@ func (b *Bidder) Start() {
 					//remove the order
 					continue Polling
 				}
+
+				if order.OutDated == "Y" {
+					amount := fmt.Sprintf("%.2f", bidAmount)
+					form := url.Values{}
+					form.Add("bid_add_ua", "mmmmmm")
+					form.Add("bid_add", "1")
+					form.Add("bid", amount)
+
+					orderURL := "https://essayshark.com/writer/orders/" + orderNo + ".html"
+					bidReq, _ := http.NewRequest("POST", orderURL, strings.NewReader(form.Encode()))
+					bidReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+					bidReq.Header.Add("User-Agent", "Other")
+					bidReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
+					client.Do(bidReq)
+
+					mlock.Lock()
+					if _, ok := AssignedOrders[orderNo]; ok {
+						delete(AssignedOrders, orderNo)
+					}
+					mlock.Unlock()
+					continue Polling
+
+				}
+
 				orderURL := "https://essayshark.com/writer/orders/" + orderNo + ".html"
+				fmt.Printf("[%d]Opening--->%s\n", b.ID, orderURL)
+				wd.Get(orderURL)
 
-				var amount string
-				//send message
-				c <- orderNo
-				amount = <-c1
-				/* count := 0
-				//wait for a response
-				for {
-					input := <-c1
-					if input == orderNo {
-						amount = <-c1
-						break
+				//Check for recommended bid amount
+				//var amount string
+				//wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+				//	elem, _ := wd.FindElement(selenium.ByID, "rec_bid")
+				//	if elem != nil {
+				//		elem, err = elem.FindElement(selenium.ByID, "rec_amount")
+				//		if elem != nil {
+				//			rec, _ := elem.Text()
+				//			if rec != "" {
+				//				amount = rec
+				//				fmt.Println("Rec-amount:::", rec)
+				//			}
+				//		}
+				//
+				//	}
+				//	return amount != "", nil
+				//}, 5*time.Second)
+				//
+				//if amount == "" {
+				//	amount = fmt.Sprintf("%.2f", bidAmount)
+				//	fmt.Println("error:::no  amount found", orderNo)
+				//	//panic("no  amount found")
+				//}
+
+				amount := fmt.Sprintf("%.2f", bidAmount)
+
+				wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
+					elem, err = driver.FindElement(selenium.ByXPATH, "//a[contains (@target,'download_ifm')]")
+					if elem != nil {
+						return true, nil
 					}
-					//prevent infinite loop
-					count++
-					if count > 300 {
-						count = 0
-						continue Polling
 
+					return false, nil
+				}, 5*time.Second, 1*time.Millisecond)
+
+				if elem != nil {
+					wd.ExecuteScript("scroll(2000, 200)", nil)
+					if err = elem.Click(); err != nil {
+						//unable to donwload file
 					}
-
-				} */
-
-				if amount == "" {
-					amount = fmt.Sprintf("%.2f", bidAmount)
 				}
 
-				fmt.Println("Amount:::", amount)
-
-				var block = &sync.Mutex{}
-				var bg sync.WaitGroup
-
-				client = &http.Client{}
-				pingReq, _ := http.NewRequest("GET", fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%s", orderNo), bytes.NewBuffer([]byte("")))
-				pingReq.Header.Add("User-Agent", "")
-				pingReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
-				var ping Ping
-
-				for {
-					res, _ := client.Do(pingReq)
-					json.NewDecoder(res.Body).Decode(&ping)
-					if ping.TimeRemain < 11 {
-						break
-					}
-
-				}
-
-				time.Sleep(5 * time.Second)
-
-				for i := 0; i < 10; i++ {
+				//var bg sync.WaitGroup
+				for i := 0; i < 11; i++ {
 					//launch bidding subroutines
-					bg.Add(1)
-					go func() {
-						defer bg.Done()
+					//bg.Add(1)
+					go func(orderNo string, amount string, orderURL string) {
+						//defer bg.Done()
+						client = &http.Client{}
+						pingReq, _ := http.NewRequest("GET", fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%s", orderNo), bytes.NewBuffer([]byte("")))
+						pingReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
+						pingReq.Header.Add("User-Agent", "Other")
+						var ping Ping
+
+						res, _ := client.Do(pingReq)
+						json.NewDecoder(res.Body).Decode(&ping)
+						var timeRemain int
+						if res.Status == "520" {
+							timeRemain = 520
+						} else {
+							timeRemain = ping.TimeRemain
+						}
 
 						form := url.Values{}
-						form.Add("bid_add_ua", "m")
+						form.Add("bid_add_ua", "mmmmmm")
 						form.Add("bid_add", "1")
 						form.Add("bid", amount)
+						var requests []*http.Request
 
-						bidCount := 0
-						for {
-
-							fmt.Println(amount, orderNo, orderURL)
+						client = &http.Client{}
+						for i := 0; i < 30; i++ {
 							bidReq, _ := http.NewRequest("POST", orderURL, strings.NewReader(form.Encode()))
 							bidReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 							bidReq.Header.Add("User-Agent", "Other")
 							bidReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
+							requests = append(requests, bidReq)
+						}
 
-							block.Lock()
-							client.Do(bidReq)
-							block.Unlock()
-							bidCount++
-							if bidCount > 30 {
+						for {
 
-								//remove the order
-								//time.Sleep(4 * time.Second)
-								//mlock.Lock()
-								//if _, ok := AssignedOrders[orderNo]; ok {
-								//	delete(AssignedOrders, orderNo)
-								//}
-								//mlock.Unlock()
+							if timeRemain < 11 {
+								for i := 0; i < len(requests); i++ {
+									client.Do(requests[i])
+								}
+
+								mlock.Lock()
+								if _, ok := AssignedOrders[orderNo]; ok {
+									delete(AssignedOrders, orderNo)
+								}
+								mlock.Unlock()
 								break
+
+							} else {
+								res, _ := client.Do(pingReq)
+								json.NewDecoder(res.Body).Decode(&ping)
+								if res.Status != "520" {
+									timeRemain = ping.TimeRemain
+
+									if timeRemain < 11 {
+										time.Sleep(4 * time.Second)
+									}
+								}
 							}
 
 						}
 
-					}()
+					}(orderNo, amount, orderURL)
 				}
-				bg.Wait()
+				//bg.Wait()
 
 				//send a message
 				//wd.Get(orderURL)
@@ -610,68 +636,12 @@ func (b *Bidder) Start() {
 				//	}
 				//	return false, nil
 				//}, 5*time.Second)
-
 				continue Polling
 
 			}
-		}(c)
+		}()
 
 	}
 
-	//Download files and read the recomended bid amount
-	for {
-		orderNo := <-c
-
-		fmt.Printf("[%d]Opening--->%s\n", b.ID, orderNo)
-		orderURL := "https://essayshark.com/writer/orders/" + orderNo + ".html"
-
-		wd.Get(orderURL)
-
-		//Check for recommended bid amount
-		var amount string
-		elem, err := wd.FindElement(selenium.ByID, "rec_bid")
-		if elem != nil {
-			elem, err = elem.FindElement(selenium.ByID, "rec_amount")
-			if elem != nil {
-				rec, _ := elem.Text()
-				if rec != "" {
-					amount = rec
-					fmt.Println("Rec-amount:::", rec)
-				}
-			}
-
-		}
-
-		//Check for undownloaded files
-		var ping Ping
-		client = &http.Client{}
-		pingReq, _ := http.NewRequest("GET", fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%s", orderNo), bytes.NewBuffer([]byte("")))
-		pingReq.Header.Add("User-Agent", "Other")
-		pingReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
-		res, _ := client.Do(pingReq)
-		json.NewDecoder(res.Body).Decode(&ping)
-
-		//if ping.FilesRemain != 0 {
-		//download atleast one file
-		wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
-			elem, err = driver.FindElement(selenium.ByXPATH, "//a[contains (@target,'download_ifm')]")
-			if elem != nil {
-				return true, nil
-			}
-
-			return false, nil
-		}, 5*time.Second, 1*time.Millisecond)
-
-		if elem != nil {
-			wd.ExecuteScript("scroll(2000, 200)", nil)
-			if err = elem.Click(); err != nil {
-				//unable to donwload file
-			}
-		}
-		//}
-		//send message
-		//c1 <- orderNo
-		c1 <- amount
-
-	}
+	wg.Wait()
 }
