@@ -33,6 +33,7 @@ func formatText(s string) string {
 
 var AssignedOrders = make(map[string]string)
 var allDiscarded = false
+var available AvailableItems
 
 //locks
 var mlock = &sync.Mutex{}
@@ -295,7 +296,7 @@ func (b *Bidder) Start() {
 			auth_token := cookie.Value
 
 			client := &http.Client{}
-			var available AvailableItems
+
 			ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=0&_=1629218589134"
 			req, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte("")))
 			req.Header.Add("User-Agent", "Other")
@@ -345,13 +346,17 @@ func (b *Bidder) Start() {
 			fmt.Printf("[%d]:polling... \n", b.ID)
 
 			wd.Get("https://essayshark.com/writer/orders/")
-
+			var newOrders AvailableItems
 		Polling:
 			for {
+				//This server as the primary thread
+				if b.ID == 1 {
+					res, _ := client.Do(req)
+					json.NewDecoder(res.Body).Decode(&available)
+				}
 
-				res, _ := client.Do(req)
-				json.NewDecoder(res.Body).Decode(&available)
-				if len(available.Orders) < b.ID {
+				newOrders = available
+				if len(newOrders.Orders) < b.ID {
 					/* 	//stop bidding
 					if !b.Run {
 						b.Service.Stop()
@@ -366,7 +371,7 @@ func (b *Bidder) Start() {
 					continue Polling
 				}
 
-				req.URL, _ = url.Parse(fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%s", available.Orders[b.ID-1].ID))
+				req.URL, _ = url.Parse(fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%s", newOrders.Orders[b.ID-1].ID))
 
 				//ping the order 3 times
 				client.Do(req)
@@ -375,7 +380,7 @@ func (b *Bidder) Start() {
 
 				req.URL, _ = url.Parse(ordersURL)
 
-				order := available.Orders[b.ID-1]
+				order := newOrders.Orders[b.ID-1]
 				orderNo := order.ID
 
 				mlock.Lock()
