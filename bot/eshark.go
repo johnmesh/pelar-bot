@@ -37,6 +37,7 @@ var allDiscarded = false
 //locks
 var mlock = &sync.Mutex{}
 var slock = &sync.Mutex{}
+var dlock = &sync.Mutex{}
 
 type Bidder struct {
 	ID      int
@@ -302,7 +303,7 @@ func (b *Bidder) Start() {
 			req.URL, _ = url.Parse(ordersURL)
 
 			//Discard all orders
-			mlock.Lock()
+			dlock.Lock()
 			if !allDiscarded {
 				for {
 
@@ -339,7 +340,7 @@ func (b *Bidder) Start() {
 				}
 				allDiscarded = true
 			}
-			mlock.Unlock()
+			dlock.Unlock()
 			count := 0
 			fmt.Printf("[%d]:polling... \n", b.ID)
 
@@ -379,8 +380,11 @@ func (b *Bidder) Start() {
 
 				mlock.Lock()
 				if _, ok := AssignedOrders[orderNo]; ok {
-					mlock.Unlock()
-					continue Polling
+					if order.OutDated != "Y" {
+						mlock.Unlock()
+						continue Polling
+					}
+
 				}
 
 				AssignedOrders[orderNo] = orderNo
@@ -512,30 +516,27 @@ func (b *Bidder) Start() {
 				wd.Get(orderURL)
 
 				//Check for recommended bid amount
-				//var amount string
-				//wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
-				//	elem, _ := wd.FindElement(selenium.ByID, "rec_bid")
-				//	if elem != nil {
-				//		elem, err = elem.FindElement(selenium.ByID, "rec_amount")
-				//		if elem != nil {
-				//			rec, _ := elem.Text()
-				//			if rec != "" {
-				//				amount = rec
-				//				fmt.Println("Rec-amount:::", rec)
-				//			}
-				//		}
-				//
-				//	}
-				//	return amount != "", nil
-				//}, 5*time.Second)
-				//
-				//if amount == "" {
-				//	amount = fmt.Sprintf("%.2f", bidAmount)
-				//	fmt.Println("error:::no  amount found", orderNo)
-				//	//panic("no  amount found")
-				//}
+				var amount string
+				wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+					elem, _ := wd.FindElement(selenium.ByID, "rec_bid")
+					if elem != nil {
+						elem, err = elem.FindElement(selenium.ByID, "rec_amount")
+						if elem != nil {
+							rec, _ := elem.Text()
+							if rec != "" {
+								amount = rec
+								fmt.Println("Rec-amount:::", rec)
+							}
+						}
 
-				amount := fmt.Sprintf("%.2f", bidAmount)
+					}
+					return amount != "", nil
+				}, 5*time.Second)
+
+				if amount == "" {
+					amount = fmt.Sprintf("%.2f", bidAmount)
+
+				}
 
 				wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 					elem, err = driver.FindElement(selenium.ByXPATH, "//a[contains (@target,'download_ifm')]")
@@ -554,7 +555,7 @@ func (b *Bidder) Start() {
 				}
 
 				//var bg sync.WaitGroup
-				for i := 0; i < 11; i++ {
+				for i := 0; i < 100; i++ {
 					//launch bidding subroutines
 					//bg.Add(1)
 					go func(orderNo string, amount string, orderURL string) {
@@ -578,29 +579,19 @@ func (b *Bidder) Start() {
 						form.Add("bid_add_ua", "mmmmmm")
 						form.Add("bid_add", "1")
 						form.Add("bid", amount)
-						var requests []*http.Request
-
-						client = &http.Client{}
-						for i := 0; i < 30; i++ {
-							bidReq, _ := http.NewRequest("POST", orderURL, strings.NewReader(form.Encode()))
-							bidReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-							bidReq.Header.Add("User-Agent", "Other")
-							bidReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
-							requests = append(requests, bidReq)
-						}
 
 						for {
 
 							if timeRemain < 11 {
-								for i := 0; i < len(requests); i++ {
-									client.Do(requests[i])
+								for i := 0; i < 30; i++ {
+									bidReq, _ := http.NewRequest("POST", orderURL, strings.NewReader(form.Encode()))
+									bidReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+									bidReq.Header.Add("User-Agent", "Other")
+									bidReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
+									client.Do(bidReq)
+									//fmt.Println(res.Status, amount, orderNo, orderURL)
 								}
 
-								mlock.Lock()
-								if _, ok := AssignedOrders[orderNo]; ok {
-									delete(AssignedOrders, orderNo)
-								}
-								mlock.Unlock()
 								break
 
 							} else {
