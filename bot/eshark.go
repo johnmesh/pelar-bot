@@ -33,7 +33,6 @@ func formatText(s string) string {
 
 var AssignedOrders = make(map[string]string)
 var allDiscarded = false
-var available AvailableItems
 
 //locks
 var mlock = &sync.Mutex{}
@@ -302,7 +301,7 @@ func (b *Bidder) Start() {
 			req.Header.Add("User-Agent", "Other")
 			req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 			req.URL, _ = url.Parse(ordersURL)
-
+			var available AvailableItems
 			//Discard all orders
 			dlock.Lock()
 			if !allDiscarded {
@@ -346,24 +345,22 @@ func (b *Bidder) Start() {
 			fmt.Printf("[%d]:polling... \n", b.ID)
 
 			wd.Get("https://essayshark.com/writer/orders/")
-			var newOrders AvailableItems
+
 		Polling:
 			for {
-				//This server as the primary thread
-				if b.ID == 1 {
-					res, _ := client.Do(req)
-					json.NewDecoder(res.Body).Decode(&available)
-				}
 
-				newOrders = available
-				if len(newOrders.Orders) < b.ID {
+				res, _ := client.Do(req)
+				json.NewDecoder(res.Body).Decode(&available)
+
+				size := len(available.Orders)
+				if size < b.ID {
 					/* 	//stop bidding
 					if !b.Run {
 						b.Service.Stop()
 						break
 					} */
 					count++
-					if count > 200 {
+					if count > 100 {
 						wd.Refresh()
 						count = 0
 					}
@@ -371,7 +368,7 @@ func (b *Bidder) Start() {
 					continue Polling
 				}
 
-				req.URL, _ = url.Parse(fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%s", newOrders.Orders[b.ID-1].ID))
+				req.URL, _ = url.Parse(fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%s", available.Orders[size-b.ID].ID))
 
 				//ping the order 3 times
 				client.Do(req)
@@ -380,7 +377,7 @@ func (b *Bidder) Start() {
 
 				req.URL, _ = url.Parse(ordersURL)
 
-				order := newOrders.Orders[b.ID-1]
+				order := available.Orders[size-b.ID]
 				orderNo := order.ID
 
 				mlock.Lock()
@@ -544,13 +541,13 @@ func (b *Bidder) Start() {
 				}
 
 				wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
-					elem, err = driver.FindElement(selenium.ByXPATH, "//a[contains (@target,'download_ifm')]")
+					elem, err = wd.FindElement(selenium.ByXPATH, "//a[contains (@target,'download_ifm')]")
 					if elem != nil {
 						return true, nil
 					}
 
 					return false, nil
-				}, 5*time.Second, 1*time.Millisecond)
+				}, 5*time.Second, 20*time.Millisecond)
 
 				if elem != nil {
 					wd.ExecuteScript("scroll(2000, 200)", nil)
