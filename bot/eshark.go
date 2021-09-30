@@ -227,7 +227,18 @@ func (b *Bidder) Start() {
 	caps.AddChrome(chromeCaps)
 
 	var wg sync.WaitGroup
-	for i := 0; i < 3; i++ {
+
+	//distribute the threads
+	var noOfThreads int
+	if b.ID == 1 {
+		noOfThreads = 5
+	} else if b.ID == 2 {
+		noOfThreads = 3
+	} else if b.ID == 3 {
+		noOfThreads = 1
+	}
+
+	for i := 0; i < noOfThreads; i++ {
 		wg.Add(1)
 
 		//launch poller subroutines
@@ -298,7 +309,7 @@ func (b *Bidder) Start() {
 
 			ordersURL := "https://essayshark.com/writer/orders/aj_source.html?act=load_list&nobreath=1&session_more_qty=0&session_discarded=0&_=1629218589134"
 			req, _ := http.NewRequest("GET", "", bytes.NewBuffer([]byte("")))
-			req.Header.Add("User-Agent", "Other")
+			req.Header.Add("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Mobile Safari/537.36")
 			req.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 			req.URL, _ = url.Parse(ordersURL)
 			var available AvailableItems
@@ -330,7 +341,7 @@ func (b *Bidder) Start() {
 
 					discardAllReq, _ := http.NewRequest("POST", "https://essayshark.com/writer/orders/aj_source.html", strings.NewReader(form.Encode()))
 					discardAllReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-					discardAllReq.Header.Add("User-Agent", "Other")
+					discardAllReq.Header.Add("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Mobile Safari/537.36")
 					discardAllReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 					_, err = client.Do(discardAllReq)
 					if err != nil {
@@ -351,7 +362,7 @@ func (b *Bidder) Start() {
 
 				res, _ := client.Do(req)
 				json.NewDecoder(res.Body).Decode(&available)
-
+				//fmt.Println("Status::::", res.Status)
 				size := len(available.Orders)
 				if size < b.ID {
 					/* 	//stop bidding
@@ -398,7 +409,7 @@ func (b *Bidder) Start() {
 				// */
 				client := &http.Client{}
 				discardReq, err := http.NewRequest("GET", fmt.Sprintf("https://essayshark.com/writer/orders/aj_source.html?act=discard&nobreath=0&id=%s", orderNo), bytes.NewBuffer([]byte("")))
-				discardReq.Header.Add("User-Agent", "Other")
+				discardReq.Header.Add("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Mobile Safari/537.36")
 				discardReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 
 				title := order.Discipline2AR.Title
@@ -500,7 +511,7 @@ func (b *Bidder) Start() {
 					orderURL := "https://essayshark.com/writer/orders/" + orderNo + ".html"
 					bidReq, _ := http.NewRequest("POST", orderURL, strings.NewReader(form.Encode()))
 					bidReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-					bidReq.Header.Add("User-Agent", "Other")
+					bidReq.Header.Add("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Mobile Safari/537.36")
 					bidReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 					client.Do(bidReq)
 
@@ -518,27 +529,28 @@ func (b *Bidder) Start() {
 				wd.Get(orderURL)
 
 				//Check for recommended bid amount
-				var amount string
-				wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
-					elem, _ := wd.FindElement(selenium.ByID, "rec_bid")
-					if elem != nil {
-						elem, err = elem.FindElement(selenium.ByID, "rec_amount")
-						if elem != nil {
-							rec, _ := elem.Text()
-							if rec != "" {
-								amount = rec
-								fmt.Println("Rec-amount:::", rec)
-							}
-						}
-
-					}
-					return amount != "", nil
-				}, 5*time.Second)
-
-				if amount == "" {
-					amount = fmt.Sprintf("%.2f", bidAmount)
-
-				}
+				//	var amount string
+				//	wd.WaitWithTimeout(func(driver selenium.WebDriver) (bool, error) {
+				//		elem, _ := wd.FindElement(selenium.ByID, "rec_bid")
+				//		if elem != nil {
+				//			elem, err = elem.FindElement(selenium.ByID, "rec_amount")
+				//			if elem != nil {
+				//				rec, _ := elem.Text()
+				//				if rec != "" {
+				//					amount = rec
+				//					fmt.Println("Rec-amount:::", rec)
+				//				}
+				//			}
+				//
+				//		}
+				//		return amount != "", nil
+				//	}, 5*time.Second)
+				//
+				//	if amount == "" {
+				//		amount = fmt.Sprintf("%.2f", bidAmount)
+				//
+				//	}
+				amount := fmt.Sprintf("%.2f", bidAmount)
 
 				wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
 					elem, err = wd.FindElement(selenium.ByXPATH, "//a[contains (@target,'download_ifm')]")
@@ -565,7 +577,7 @@ func (b *Bidder) Start() {
 						client = &http.Client{}
 						pingReq, _ := http.NewRequest("GET", fmt.Sprintf("https://essayshark.com/writer/orders/ping.html?order=%s", orderNo), bytes.NewBuffer([]byte("")))
 						pingReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
-						pingReq.Header.Add("User-Agent", "Other")
+						pingReq.Header.Add("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Mobile Safari/537.36")
 						var ping Ping
 
 						res, _ := client.Do(pingReq)
@@ -588,7 +600,7 @@ func (b *Bidder) Start() {
 								for i := 0; i < 30; i++ {
 									bidReq, _ := http.NewRequest("POST", orderURL, strings.NewReader(form.Encode()))
 									bidReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-									bidReq.Header.Add("User-Agent", "Other")
+									bidReq.Header.Add("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Mobile Safari/537.36")
 									bidReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
 									client.Do(bidReq)
 									//fmt.Println(res.Status, amount, orderNo, orderURL)
