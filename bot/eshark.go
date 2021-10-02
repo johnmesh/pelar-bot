@@ -384,7 +384,7 @@ func (b *Bidder) Start() {
 				//ping the order 3 times
 				client.Do(req)
 				client.Do(req)
-				client.Do(req)
+				//client.Do(req)
 
 				req.URL, _ = url.Parse(ordersURL)
 
@@ -553,13 +553,16 @@ func (b *Bidder) Start() {
 				amount := fmt.Sprintf("%.2f", bidAmount)
 
 				wd.WaitWithTimeoutAndInterval(func(driver selenium.WebDriver) (bool, error) {
-					elem, err = wd.FindElement(selenium.ByXPATH, "//a[contains (@target,'download_ifm')]")
+					elem, _ = wd.FindElement(selenium.ByCSSSelector, ".paper_instructions_view")
 					if elem != nil {
-						return true, nil
+						elem, err = elem.FindElement(selenium.ByXPATH, "//a[contains (@target,'download_ifm')]")
+						if elem != nil {
+							return true, nil
+						}
 					}
 
 					return false, nil
-				}, 5*time.Second, 20*time.Millisecond)
+				}, 5*time.Second, 10*time.Millisecond)
 
 				if elem != nil {
 					wd.ExecuteScript("scroll(2000, 200)", nil)
@@ -569,7 +572,7 @@ func (b *Bidder) Start() {
 				}
 
 				//var bg sync.WaitGroup
-				for i := 0; i < 100; i++ {
+				for i := 0; i < 1; i++ {
 					//launch bidding subroutines
 					//bg.Add(1)
 					go func(orderNo string, amount string, orderURL string) {
@@ -597,13 +600,17 @@ func (b *Bidder) Start() {
 						for {
 
 							if timeRemain < 11 {
-								for i := 0; i < 30; i++ {
-									bidReq, _ := http.NewRequest("POST", orderURL, strings.NewReader(form.Encode()))
-									bidReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-									bidReq.Header.Add("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Mobile Safari/537.36")
-									bidReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
-									client.Do(bidReq)
-									//fmt.Println(res.Status, amount, orderNo, orderURL)
+								for i := 0; i < 60; i++ {
+									go func() {
+										client := &http.Client{}
+										bidReq, _ := http.NewRequest("POST", orderURL, strings.NewReader(form.Encode()))
+										bidReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+										bidReq.Header.Add("User-Agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Mobile Safari/537.36")
+										bidReq.AddCookie(&http.Cookie{Name: "a11nt3n", Value: auth_token})
+										res, _ := client.Do(bidReq)
+										fmt.Println(res.Status)
+									}()
+									time.Sleep(100 * time.Millisecond)
 								}
 
 								break
@@ -611,13 +618,13 @@ func (b *Bidder) Start() {
 							} else {
 								res, _ := client.Do(pingReq)
 								json.NewDecoder(res.Body).Decode(&ping)
-								if res.Status != "520" {
-									timeRemain = ping.TimeRemain
+								//if res.Status != "520" {
+								timeRemain = ping.TimeRemain
 
-									if timeRemain < 11 {
-										time.Sleep(4 * time.Second)
-									}
+								if timeRemain < 11 {
+									time.Sleep(8 * time.Second)
 								}
+								//	}
 							}
 
 						}
