@@ -9,12 +9,14 @@ import (
 
 func main() {
 	email := os.Getenv("EMAIL")
+	token := os.Getenv("TOKEN")
 
 	if email == "" {
-		log.Fatal("Email required")
+		log.Fatal("Email or token required")
 	}
-	fmt.Println("Account::::", email)
+	fmt.Println("Account::::", email, token)
 
+	//token = "4cv05t83c13463831497ba1d7e1f6273"
 	bot.Init(email)
 
 	//err := getAccount(&account, email)
